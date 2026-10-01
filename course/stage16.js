@@ -4,7 +4,7 @@ addEngineeringStage(16, [
     "task": "计算 add(2,3)，用 assert 验证结果等于5，最后输出 passed。",
     "concept": "assert 做最小自动验证",
     "starter": "def add(a, b):\n    return a + b\n\n# 写断言\n\nprint('passed')\n",
-    "solution": "assert add(2, 3) == 5\nprint('passed')",
+    "solution": "def add(a, b):\n    return a + b\n\nassert add(2, 3) == 5\nprint('passed')",
     "expected": "passed",
     "must": [
       "assert"
