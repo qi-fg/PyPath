@@ -56,6 +56,11 @@ def current_version() -> str:
     return str(read_json(VERSION_PATH, {}).get("version", "0.0.0"))
 
 
+def display_version() -> str:
+    meta = read_json(VERSION_PATH, {})
+    return str(meta.get("displayVersion") or meta.get("version") or "0.0.0")
+
+
 def parse_version(value: str):
     parts = []
     for item in str(value).split("."):
@@ -111,7 +116,7 @@ def apply_online_update() -> dict:
     manifest = online_update_info()
     remote_version = str(manifest["version"])
     if parse_version(remote_version) <= parse_version(current_version()):
-        return {"updated": False, "version": current_version(), "restartRequired": False}
+        return {"updated": False, "version": current_version(), "displayVersion": display_version(), "restartRequired": False}
 
     package = download_bytes(str(manifest["downloadUrl"]))
     expected = str(manifest.get("sha256") or "").strip().lower()
@@ -253,6 +258,7 @@ def apply_update(zip_bytes: bytes) -> dict:
         payload = find_payload_root(extract_dir)
         meta = read_json(payload / "version.json", {})
         package_version = str(meta.get("version", "0.0.0"))
+        package_display_version = str(meta.get("displayVersion") or package_version)
         if meta.get("name") != "PyPath":
             raise ValueError("更新包缺少 PyPath 标识")
         if parse_version(package_version) <= parse_version(current_version()):
@@ -302,7 +308,7 @@ def apply_update(zip_bytes: bytes) -> dict:
                         shutil.copy2(src, dst)
             raise
 
-    return {"version": package_version, "restartRequired": True}
+    return {"version": package_version, "displayVersion": package_display_version, "restartRequired": True}
 
 
 def launch_after_exit(port: int):
@@ -390,6 +396,7 @@ class Handler(SimpleHTTPRequestHandler):
             self._send_json({
                 "ok": True,
                 "version": current_version(),
+                "displayVersion": display_version(),
                 "ai": {
                     "enabled": bool(cfg.get("enabled")),
                     "configured": bool(cfg.get("endpoint") and cfg.get("model") and cfg.get("apiKey")),
