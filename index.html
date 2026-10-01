@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light" />
   <title>PyPath · Python 训练场</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=2.1.2" />
 </head>
 <body>
   <header class="topbar">
@@ -142,82 +142,114 @@
         <button class="modal-close" data-close-modal>×</button>
       </div>
 
-      <div class="setting-section">
-        <div class="section-title">版本与更新</div>
-        <div class="setting-row">
-          <div>
-            <strong>当前版本</strong>
-            <span id="versionText">正在读取…</span>
+      <div class="settings-body">
+        <section class="settings-group">
+          <div class="settings-group-head">
+            <div>
+              <h3>版本与更新</h3>
+              <p>保持 PyPath 为最新版本</p>
+            </div>
           </div>
-          <button id="checkUpdateBtn" class="btn soft">检查在线更新</button>
-        </div>
-        <div id="updateStatus" class="setting-note">在线更新地址尚未绑定时，也可以直接安装我给你的 ZIP 更新包。</div>
-        <div class="setting-row compact-row">
-          <div>
-            <strong>内部安装更新包</strong>
-            <span>以后拿到新版 ZIP，不需要解压覆盖，直接在这里安装</span>
+
+          <div class="settings-card version-card">
+            <div class="settings-card-main">
+              <span class="settings-eyebrow">当前版本</span>
+              <div class="version-line">
+                <strong id="versionText">正在读取…</strong>
+                <span class="status-chip">稳定版</span>
+              </div>
+            </div>
+            <button id="checkUpdateBtn" class="btn soft settings-main-action">检查更新</button>
           </div>
-          <div class="inline-actions">
-            <button id="installUpdateBtn" class="btn primary">选择更新包</button>
+          <div id="updateStatus" class="settings-message">正在连接 PyPath 更新频道…</div>
+
+          <div class="settings-card secondary-card">
+            <div class="settings-card-main">
+              <strong>手动安装更新包</strong>
+              <span>通常不需要使用。只有拿到本地 ZIP 更新包时才从这里安装。</span>
+            </div>
+            <button id="installUpdateBtn" class="btn soft">选择 ZIP</button>
             <input id="updateFile" type="file" accept=".zip,application/zip" class="hidden" />
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div class="setting-section">
-        <div class="section-title">AI 导师</div>
-        <div class="ai-setting-grid">
-          <label class="toggle-row">
-            <input id="aiEnabled" type="checkbox" />
-            <span><strong>启用 AI 导师</strong><small>未启用时继续使用免费的本地智能导师</small></span>
-          </label>
-          <label>
-            <span>接口地址</span>
-            <input id="aiEndpoint" class="setting-input" type="url" placeholder="例如：https://.../v1 或完整 chat/completions 地址" />
-          </label>
-          <label>
-            <span>模型名称</span>
-            <input id="aiModel" class="setting-input" type="text" placeholder="填写你账号可用的模型名" />
-          </label>
-          <label>
-            <span>API Key</span>
-            <input id="aiApiKey" class="setting-input" type="password" autocomplete="off" placeholder="留空表示保留已保存的 Key" />
-          </label>
-          <div class="ai-actions">
-            <button id="saveAiBtn" class="btn primary">保存 AI 设置</button>
-            <span id="aiSettingStatus" class="mini-status"></span>
+        <section class="settings-group">
+          <div class="settings-group-head">
+            <div>
+              <h3>AI 导师</h3>
+              <p>可选功能；不开启时继续使用免费的本地导师</p>
+            </div>
           </div>
-          <div class="setting-note ai-note">Key 仅保存在你电脑的本地配置文件中（不加密），由本地服务调用，网页不会回显完整 Key。不要在公用电脑保存。接口需兼容 OpenAI Chat Completions 格式。</div>
-        </div>
-      </div>
 
-      <div class="setting-section">
-      <div class="setting-row">
-        <div>
-          <strong>学习数据</strong>
-          <span>导出后换电脑也可以恢复</span>
-        </div>
-        <div class="inline-actions">
-          <button id="exportDataBtn" class="btn soft">导出</button>
-          <button id="importDataBtn" class="btn soft">导入</button>
-          <input id="importFile" type="file" accept="application/json" class="hidden" />
-        </div>
-      </div>
+          <label class="ai-master-toggle">
+            <span class="switch-wrap">
+              <input id="aiEnabled" type="checkbox" />
+              <span class="switch-ui"></span>
+            </span>
+            <span class="ai-master-copy">
+              <strong>启用在线 AI 导师</strong>
+              <small>根据你当前的题目、代码和报错提供针对性辅导</small>
+            </span>
+          </label>
 
-      <div class="setting-row danger-row">
-        <div>
-          <strong>重置本地学习记录</strong>
-          <span>会清除关卡进度、代码和错误统计</span>
-        </div>
-        <button id="resetProgressBtn" class="btn danger-soft">重置</button>
-      </div>
+          <div class="ai-form-card">
+            <label class="form-field form-field-wide">
+              <span>接口地址</span>
+              <input id="aiEndpoint" class="setting-input" type="url" placeholder="例如：https://api.example.com/v1" />
+            </label>
+            <label class="form-field">
+              <span>模型名称</span>
+              <input id="aiModel" class="setting-input" type="text" placeholder="例如：模型 ID" />
+            </label>
+            <label class="form-field">
+              <span>API Key</span>
+              <input id="aiApiKey" class="setting-input" type="password" autocomplete="off" placeholder="留空表示保留已保存的 Key" />
+            </label>
+            <div class="ai-form-footer">
+              <div>
+                <span id="aiSettingStatus" class="mini-status">尚未配置</span>
+                <p>Key 只保存在当前电脑，不会显示在网页中。</p>
+              </div>
+              <button id="saveAiBtn" class="btn primary">保存 AI 设置</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-group">
+          <div class="settings-group-head">
+            <div>
+              <h3>学习数据</h3>
+              <p>备份进度，或迁移到另一台电脑</p>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-card-main">
+              <strong>备份与恢复</strong>
+              <span>包含关卡进度、练习代码和错误统计。</span>
+            </div>
+            <div class="inline-actions">
+              <button id="exportDataBtn" class="btn soft">导出数据</button>
+              <button id="importDataBtn" class="btn soft">导入数据</button>
+              <input id="importFile" type="file" accept="application/json" class="hidden" />
+            </div>
+          </div>
+
+          <div class="settings-card danger-card">
+            <div class="settings-card-main">
+              <strong>重置学习记录</strong>
+              <span>清除本机全部关卡进度、代码和错误统计，此操作不可撤销。</span>
+            </div>
+            <button id="resetProgressBtn" class="btn danger-soft">重置</button>
+          </div>
+        </section>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
-  <script src="lessons.js"></script>
+  <script src="lessons.js?v=2.1.2"></script>
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.57.0/min/vs/loader.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=2.1.2"></script>
 </body>
 </html>
