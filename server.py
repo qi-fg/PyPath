@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import hashlib
 import shutil
 import subprocess
 import sys
@@ -61,6 +62,66 @@ def parse_version(value: str):
         digits = "".join(ch for ch in item if ch.isdigit())
         parts.append(int(digits or 0))
     return tuple((parts + [0, 0, 0])[:3])
+
+
+def load_update_config():
+    return read_json(ROOT / "update-config.json", {
+        "autoCheck": True,
+        "channel": "stable",
+        "manifestUrl": "https://raw.githubusercontent.com/qi-fg/PyPath/main/update-manifest.json",
+    })
+
+
+def fetch_json_url(url: str, timeout: int = 20):
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": f"PyPath/{current_version()}",
+            "Cache-Control": "no-cache",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8-sig"))
+
+
+def download_bytes(url: str, timeout: int = 120) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": f"PyPath/{current_version()}"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        data = resp.read(MAX_BODY + 1)
+    if len(data) > MAX_BODY:
+        raise ValueError("更新包超过允许大小")
+    return data
+
+
+def online_update_info():
+    config = load_update_config()
+    manifest_url = str(config.get("manifestUrl") or "").strip()
+    if not manifest_url:
+        raise ValueError("更新地址未配置")
+    manifest = fetch_json_url(manifest_url)
+    remote_version = str(manifest.get("version") or "").strip()
+    download_url = str(manifest.get("downloadUrl") or "").strip()
+    if not remote_version or not download_url:
+        raise ValueError("在线更新清单无效")
+    return manifest
+
+
+def apply_online_update() -> dict:
+    manifest = online_update_info()
+    remote_version = str(manifest["version"])
+    if parse_version(remote_version) <= parse_version(current_version()):
+        return {"updated": False, "version": current_version(), "restartRequired": False}
+
+    package = download_bytes(str(manifest["downloadUrl"]))
+    expected = str(manifest.get("sha256") or "").strip().lower()
+    if expected:
+        actual = hashlib.sha256(package).hexdigest().lower()
+        if actual != expected:
+            raise ValueError("在线更新包 SHA256 校验失败")
+
+    result = apply_update(package)
+    return {"updated": True, **result}
 
 
 def load_ai_config():
@@ -325,6 +386,7 @@ class Handler(SimpleHTTPRequestHandler):
         path = parsed.path
         if path == "/api/status":
             cfg = load_ai_config()
+            startup_update = read_json(ROOT / "update-status.json", {})
             self._send_json({
                 "ok": True,
                 "version": current_version(),
@@ -334,6 +396,7 @@ class Handler(SimpleHTTPRequestHandler):
                     "provider": cfg.get("provider", ""),
                     "model": cfg.get("model", ""),
                 },
+                "startupUpdate": startup_update if isinstance(startup_update, dict) else {},
             })
             return
         if path == "/api/ai/config":
@@ -396,6 +459,11 @@ class Handler(SimpleHTTPRequestHandler):
                 if "application/zip" not in ctype and "application/octet-stream" not in ctype:
                     raise ValueError("请选择 ZIP 更新包")
                 result = apply_update(self._read_body())
+                self._send_json({"ok": True, **result})
+                return
+
+            if path == "/api/update/online":
+                result = apply_online_update()
                 self._send_json({"ok": True, **result})
                 return
 
