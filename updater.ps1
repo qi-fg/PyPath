@@ -4,6 +4,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 $configPath = Join-Path $Root 'update-config.json'
 $versionPath = Join-Path $Root 'version.json'
 $statusPath = Join-Path $Root 'update-status.json'
@@ -45,7 +46,8 @@ try {
     }
 
     $currentVersion = Get-VersionText $versionPath
-    $manifest = Invoke-RestMethod -Uri $manifestUrl -TimeoutSec 5 -UseBasicParsing
+    $headers = @{ 'User-Agent' = "PyPath/$currentVersion"; 'Cache-Control' = 'no-cache' }
+    $manifest = Invoke-RestMethod -Uri $manifestUrl -TimeoutSec 20 -UseBasicParsing -Headers $headers
     $remoteVersion = [string]$manifest.version
     $downloadUrl = [string]$manifest.downloadUrl
 
@@ -63,7 +65,7 @@ try {
     $extractPath = Join-Path $tempRoot 'payload'
     New-Item -ItemType Directory -Path $extractPath -Force | Out-Null
 
-    Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath -UseBasicParsing -TimeoutSec 60
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath -UseBasicParsing -TimeoutSec 120 -Headers @{ 'User-Agent' = "PyPath/$currentVersion" }
 
     $expectedHash = [string]$manifest.sha256
     if (-not [string]::IsNullOrWhiteSpace($expectedHash)) {
