@@ -1,6 +1,0 @@
-{
-  "version": "2.1.1",
-  "sha256": "6f28becca673492d1a63221c7d16f607dc0e382b36b5e063a75a75ee9b3f89aa",
-  "notes": "Bind PyPath to the GitHub update channel and enable online update checks.",
-  "retry": 2
-}
