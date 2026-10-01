@@ -40,7 +40,7 @@ addEngineeringStage(20, [
     "task": "complete(tasks,id) 找到对应任务设置 done=True，id=2 后输出 True。",
     "concept": "按标识更新实体状态",
     "starter": "tasks = [{'id':1,'done':False},{'id':2,'done':False}]\ndef complete(tasks, task_id):\n    pass\n\ncomplete(tasks, 2)\nprint(tasks[1]['done'])\n",
-    "solution": "def complete(tasks, task_id):\n    for task in tasks:\n        if task['id'] == task_id:\n            task['done'] = True\n            return True\n    return False\n\ncomplete(tasks, 2)\nprint(tasks[1]['done'])",
+    "solution": "tasks = [{'id': 1, 'done': False}, {'id': 2, 'done': False}]\ndef complete(tasks, task_id):\n    for task in tasks:\n        if task['id'] == task_id:\n            task['done'] = True\n            return True\n    return False\n\ncomplete(tasks, 2)\nprint(tasks[1]['done'])",
     "expected": "True",
     "why": "更新实体时要通过稳定标识查找，并明确处理“找不到”情况。"
   },
