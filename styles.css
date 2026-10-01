@@ -710,3 +710,152 @@ html, body { overflow-x: hidden; }
   .stage-route-list { grid-template-columns: 1fr; }
   .sidebar { max-height: none; }
 }
+
+
+/* V3.0.1 wide-screen workspace tuning */
+.app-shell {
+  width: calc(100% - 24px);
+  max-width: 2600px;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 16px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.workspace {
+  grid-template-columns:
+    minmax(330px, 390px)
+    minmax(680px, 1fr)
+    minmax(320px, 360px);
+  gap: 16px;
+}
+
+.sidebar {
+  padding: 14px;
+}
+
+.stage-route-head {
+  padding: 12px 11px;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+}
+
+.stage-route-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.stage-route-copy strong {
+  font-size: 12px;
+}
+
+.stage-route-copy small {
+  font-size: 10px;
+}
+
+.stage-route-meta {
+  min-width: 58px;
+}
+
+.stage-lessons {
+  padding: 7px;
+}
+
+.stage-lessons .lesson-item {
+  min-height: 38px;
+  padding: 8px 9px;
+  font-size: 12px;
+}
+
+.lesson-panel {
+  padding: 22px;
+}
+
+.lesson-panel h1 {
+  font-size: 26px;
+}
+
+.task-text {
+  font-size: 14px;
+}
+
+.editor-panel {
+  min-height: 560px;
+}
+
+.monaco-host,
+.fallback-editor {
+  min-height: 450px;
+}
+
+.tutor-panel {
+  min-width: 0;
+}
+
+.tutor-messages {
+  max-height: calc(100vh - 330px);
+}
+
+@media (min-width: 1900px) {
+  .app-shell {
+    max-width: none;
+    width: calc(100% - 32px);
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
+
+  .workspace {
+    grid-template-columns:
+      minmax(360px, 410px)
+      minmax(760px, 1fr)
+      minmax(340px, 390px);
+  }
+
+  .lesson-panel,
+  .tutor-panel {
+    min-height: calc(100vh - 170px);
+  }
+
+  .editor-panel {
+    min-height: calc(100vh - 350px);
+  }
+}
+
+@media (max-width: 1500px) {
+  .app-shell {
+    width: calc(100% - 20px);
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+
+  .workspace {
+    grid-template-columns: minmax(270px, .72fr) minmax(0, 1.55fr);
+  }
+
+  .tutor-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 1100px) {
+  .app-shell {
+    width: calc(100% - 18px);
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    max-height: 500px;
+  }
+
+  .workspace {
+    grid-template-columns: minmax(250px, .72fr) minmax(0, 1.45fr);
+  }
+}
+
+@media (max-width: 820px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    max-height: none;
+  }
+}
