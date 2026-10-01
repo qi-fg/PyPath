@@ -40,7 +40,7 @@ addEngineeringStage(19, [
     "task": "TaskService.create(title) 拒绝空标题，否则交给 repo.add。创建 code 后输出 ['code']。",
     "concept": "service layer 业务服务层",
     "starter": "class Repo:\n    def __init__(self): self.items=[]\n    def add(self, x): self.items.append(x)\n\nclass TaskService:\n    def __init__(self, repo):\n        self.repo = repo\n    def create(self, title):\n        pass\n\nrepo = Repo()\nservice = TaskService(repo)\nservice.create('code')\nprint(repo.items)\n",
-    "solution": "class TaskService:\n    def __init__(self, repo):\n        self.repo = repo\n    def create(self, title):\n        title = title.strip()\n        if not title:\n            raise ValueError('empty title')\n        self.repo.add(title)\n\nrepo = Repo()\nservice = TaskService(repo)\nservice.create('code')\nprint(repo.items)",
+    "solution": "class Repo:\n    def __init__(self):\n        self.items = []\n    def add(self, x):\n        self.items.append(x)\n\nclass TaskService:\n    def __init__(self, repo):\n        self.repo = repo\n    def create(self, title):\n        title = title.strip()\n        if not title:\n            raise ValueError('empty title')\n        self.repo.add(title)\n\nrepo = Repo()\nservice = TaskService(repo)\nservice.create('code')\nprint(repo.items)",
     "expected": "['code']",
     "why": "Service 聚合业务规则，Repository 只负责数据存取，职责边界更清楚。"
   },
@@ -67,7 +67,7 @@ addEngineeringStage(19, [
     "task": "外部数据 {'full_name':'Ada'}，写 adapt_user 转成 {'name':'Ada'} 并输出 Ada。",
     "concept": "adapter 适配器隔离外部格式",
     "starter": "external = {'full_name': 'Ada'}\n\ndef adapt_user(data):\n    pass\n\nprint(adapt_user(external)['name'])\n",
-    "solution": "def adapt_user(data):\n    return {'name': data['full_name']}\n\nprint(adapt_user(external)['name'])",
+    "solution": "external = {'full_name': 'Ada'}\n\ndef adapt_user(data):\n    return {'name': data['full_name']}\n\nprint(adapt_user(external)['name'])",
     "expected": "Ada",
     "why": "适配层把外部格式变化限制在边界，不让整个业务代码跟着第三方接口变化。"
   },
