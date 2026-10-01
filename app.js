@@ -457,6 +457,97 @@ function tutorSay(text, type = 'tutor') {
   return el;
 }
 
+function mergeNumberMapMax(a = {}, b = {}) {
+  const out = { ...a };
+  Object.entries(b || {}).forEach(([key, value]) => {
+    const next = Number(value || 0);
+    out[key] = Math.max(Number(out[key] || 0), next);
+  });
+  return out;
+}
+
+function mergeStateFromServer(serverState) {
+  if (!serverState || typeof serverState !== 'object') return;
+  const localSolved = new Set(Array.isArray(state.solved) ? state.solved : []);
+  (Array.isArray(serverState.solved) ? serverState.solved : []).forEach(x => {
+    if (Number.isInteger(x)) localSolved.add(x);
+  });
+
+  const serverTs = Number(serverState.clientUpdatedAt || 0);
+  const localTs = Number(state.clientUpdatedAt || 0);
+  const preferServer = serverTs >= localTs;
+
+  const merged = {
+    ...state,
+    ...serverState,
+    solved: Array.from(localSolved).sort((a, b) => a - b),
+    attemptsByLesson: mergeNumberMapMax(state.attemptsByLesson, serverState.attemptsByLesson),
+    hintLevelByLesson: mergeNumberMapMax(state.hintLevelByLesson, serverState.hintLevelByLesson),
+    masteryByLesson: mergeNumberMapMax(state.masteryByLesson, serverState.masteryByLesson),
+    hiddenFailures: mergeNumberMapMax(state.hiddenFailures, serverState.hiddenFailures),
+    stats: {
+      syntaxErrors: Math.max(Number(state.stats?.syntaxErrors || 0), Number(serverState.stats?.syntaxErrors || 0)),
+      runtimeErrors: Math.max(Number(state.stats?.runtimeErrors || 0), Number(serverState.stats?.runtimeErrors || 0)),
+      wrongAnswers: Math.max(Number(state.stats?.wrongAnswers || 0), Number(serverState.stats?.wrongAnswers || 0)),
+      hintUses: Math.max(Number(state.stats?.hintUses || 0), Number(serverState.stats?.hintUses || 0))
+    }
+  };
+
+  if (!preferServer) {
+    merged.current = state.current;
+    merged.openStageId = state.openStageId;
+    merged.reviewQueue = state.reviewQueue;
+    merged.stageResults = state.stageResults;
+    merged.clientUpdatedAt = localTs;
+  }
+
+  Object.keys(state).forEach(key => delete state[key]);
+  Object.assign(state, merged);
+  state.current = Math.max(0, Math.min(Number(state.current) || 0, Math.max(0, lessons.length - 1)));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+async function syncLearningDataFromServer() {
+  if (!localServiceReady || learningDataSynced) return;
+  const localCache = collectLocalLearningCache();
+  Object.assign(learningCache.codeByLesson, localCache.codeByLesson);
+  Object.assign(learningCache.stdinByLesson, localCache.stdinByLesson);
+
+  try {
+    const resp = await fetch('/api/learning-data?t=' + Date.now(), { cache: 'no-store' });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || !data.ok) throw new Error(data.error || 'learning data unavailable');
+
+    if (data.exists && data.data && typeof data.data === 'object') {
+      const remote = data.data;
+      const remoteTs = Number(remote.clientUpdatedAt || remote.state?.clientUpdatedAt || 0);
+      const localTs = Number(state.clientUpdatedAt || 0);
+      if (remoteTs >= localTs) {
+        mergeStateFromServer(remote.state || {});
+        Object.assign(learningCache.codeByLesson, remote.codeByLesson || {});
+        Object.assign(learningCache.stdinByLesson, remote.stdinByLesson || {});
+      } else {
+        Object.entries(remote.codeByLesson || {}).forEach(([key, value]) => {
+          if (!Object.prototype.hasOwnProperty.call(learningCache.codeByLesson, key)) learningCache.codeByLesson[key] = value;
+        });
+        Object.entries(remote.stdinByLesson || {}).forEach(([key, value]) => {
+          if (!Object.prototype.hasOwnProperty.call(learningCache.stdinByLesson, key)) learningCache.stdinByLesson[key] = value;
+        });
+      }
+    }
+
+    learningDataSynced = true;
+    const status = $('learningStorageStatus');
+    if (status) status.textContent = '已启用 PyPath 本地学习数据文件；端口或浏览器变化不会丢失进度。';
+    renderAll();
+    scheduleLearningSave();
+  } catch (_) {
+    learningDataSynced = false;
+    const status = $('learningStorageStatus');
+    if (status) status.textContent = '当前使用浏览器副本；本地学习数据文件暂时未连接。';
+  }
+}
+
 function setTutorMode() {
   const badge = $('tutorModeBadge');
   const text = $('tutorModeText');
@@ -493,6 +584,7 @@ async function initLocalService() {
     localServiceReady = false;
   }
   setTutorMode();
+  if (localServiceReady) await syncLearningDataFromServer();
 }
 
 function clearTutor(showMessage = true) {
