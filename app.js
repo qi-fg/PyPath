@@ -189,7 +189,8 @@ function updateStreak() {
     state.streak = diff === 1 ? (state.streak || 1) + 1 : 1;
     state.lastStudyDate = today;
   }
-  saveState();
+  // 启动时不把旧浏览器副本伪装成“最新修改”，先让本地学习数据文件完成同步。
+  saveState({ touch: false, sync: false });
 }
 
 function stageEntries(stageId) {
