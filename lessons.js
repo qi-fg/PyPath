@@ -161,5 +161,371 @@ window.LESSONS = [
     simpleExplain: '现在每次循环都把 total 直接改成当前 n，所以最后只剩下 5。真正需要的是“在原来的 total 上继续加”。',
     codeExplain: 'total = n 是覆盖；total += n 是累加。调试时要问：这行代码是在替换旧值，还是在旧值基础上更新？',
     hints: ['问题就在循环体里的 total = n。', '你需要把新的 n 加到已有 total 上。', '把 total = n 改成 total += n。']
-  }
+  },
+{
+  "id": 13,
+  "stage": "字符串",
+  "title": "用 f-string 组合文字和变量",
+  "intro": "当文字里要插入变量时，f-string 会比不断拼接更清楚。",
+  "task": "已知 name = \"小明\"，使用 f-string 输出：你好，小明！",
+  "concept": "<code>f\"你好，{name}！\"</code> 会把变量 name 的值放进花括号位置。",
+  "starter": "name = \"小明\"\n\n# 使用 f-string 输出目标文字\n",
+  "stdin": "",
+  "expected": "你好，小明！",
+  "codeMustInclude": [
+    "f"
+  ],
+  "simpleExplain": "f-string 就像一张模板。花括号 {name} 的位置，会被变量 name 里的内容替换。",
+  "codeExplain": "字符串前面的 f 告诉 Python 这段文字里有变量；{name} 会被变量值替换。",
+  "hints": [
+    "字符串前面加 f。",
+    "把变量写进花括号，例如 {name}。",
+    "试试：print(f\"你好，{name}！\")"
+  ]
+},
+{
+  "id": 14,
+  "stage": "输入 + 类型",
+  "title": "把输入的文字变成数字",
+  "intro": "input() 得到的默认是字符串。做数学计算前，经常需要先转换类型。",
+  "task": "读取输入的年龄 20，把它转换成整数，再输出 21。",
+  "concept": "<code>int()</code> 可以把数字字符串转换成整数。",
+  "starter": "age = input()\n\n# 把 age 转成整数并加 1\n",
+  "stdin": "20",
+  "expected": "21",
+  "codeMustInclude": [
+    "int"
+  ],
+  "simpleExplain": "input() 得到的是文字 \"20\"，不是数字 20。int(age) 才会把它变成可以做加法的整数。",
+  "codeExplain": "先读取字符串，再用 int() 转成整数，然后才能做 + 1。",
+  "hints": [
+    "先考虑 input() 返回的类型。",
+    "使用 int(age) 做类型转换。",
+    "可以写：age = int(age)\nprint(age + 1)"
+  ]
+},
+{
+  "id": 15,
+  "stage": "条件判断",
+  "title": "给 if 加上 else",
+  "intro": "很多程序需要同时处理“条件成立”和“不成立”两种情况。",
+  "task": "age = 16。小于 18 时输出：未成年，否则输出：成年人。",
+  "concept": "<code>else</code> 表示前面的 if 条件不成立时执行另一段代码。",
+  "starter": "age = 16\n\n# 写 if / else 判断\n",
+  "stdin": "",
+  "expected": "未成年",
+  "simpleExplain": "if 负责“满足条件怎么办”，else 负责“不满足条件怎么办”。",
+  "codeExplain": "当 age < 18 为真时执行 if，否则进入 else。",
+  "hints": [
+    "条件可以写 age < 18。",
+    "else 后面也要有冒号。",
+    "示例：\nif age < 18:\n    print(\"未成年\")\nelse:\n    print(\"成年人\")"
+  ]
+},
+{
+  "id": 16,
+  "stage": "条件判断",
+  "title": "使用 elif 处理多个区间",
+  "intro": "当结果不只有两种时，可以用 elif 继续判断。",
+  "task": "score = 82。90 及以上输出 A，80 及以上输出 B，否则输出 C。",
+  "concept": "<code>elif</code> 表示“前面的条件没满足，再判断这个条件”。",
+  "starter": "score = 82\n\n# 使用 if / elif / else\n",
+  "stdin": "",
+  "expected": "B",
+  "simpleExplain": "Python 从上往下判断。82 不满足 >=90，但满足 >=80，所以输出 B。",
+  "codeExplain": "多个区间通常要从更高或更严格的条件开始判断。",
+  "hints": [
+    "先判断 score >= 90。",
+    "第二个条件写 score >= 80。",
+    "最后用 else 处理其余情况。"
+  ]
+},
+{
+  "id": 17,
+  "stage": "条件判断",
+  "title": "同时满足两个条件",
+  "intro": "真实任务里经常要求两个条件同时成立。",
+  "task": "age = 20，has_ticket = True。只有年龄至少 18 且有票时输出：允许进入",
+  "concept": "<code>and</code> 要求左右两个条件都为 True。",
+  "starter": "age = 20\nhas_ticket = True\n\n# 同时检查两个条件\n",
+  "stdin": "",
+  "expected": "允许进入",
+  "codeMustInclude": [
+    "and"
+  ],
+  "simpleExplain": "and 可以理解成“而且”。年龄够，而且有票，两个都成立才执行。",
+  "codeExplain": "age >= 18 和 has_ticket 都是布尔条件，用 and 把它们连接起来。",
+  "hints": [
+    "需要两个条件同时成立。",
+    "用 and 连接 age >= 18 和 has_ticket。",
+    "示例：if age >= 18 and has_ticket:"
+  ]
+},
+{
+  "id": 18,
+  "stage": "循环",
+  "title": "第一次 while 循环",
+  "intro": "for 适合遍历已知序列；while 更适合“只要条件成立就继续”。",
+  "task": "使用 while 依次输出 1、2、3。",
+  "concept": "<code>while 条件:</code> 会在条件保持为 True 时重复执行。",
+  "starter": "n = 1\n\n# 使用 while 输出 1、2、3\n",
+  "stdin": "",
+  "expected": "1\n2\n3",
+  "codeMustInclude": [
+    "while"
+  ],
+  "simpleExplain": "while 就是“只要……就继续”。循环体里一定要让条件发生变化。",
+  "codeExplain": "n 从 1 开始，每次输出后加 1；n 变成 4 时循环结束。",
+  "hints": [
+    "循环条件可以是 n <= 3。",
+    "每次循环后记得让 n 增加。",
+    "循环体里写 print(n) 和 n += 1。"
+  ]
+},
+{
+  "id": 19,
+  "stage": "循环",
+  "title": "用 break 提前结束循环",
+  "intro": "有时找到目标后就没必要继续循环。",
+  "task": "遍历 1 到 5，当数字等于 4 时停止；只输出 1、2、3。",
+  "concept": "<code>break</code> 会立即结束当前循环。",
+  "starter": "for n in range(1, 6):\n    # n 等于 4 时结束循环\n    pass\n",
+  "stdin": "",
+  "expected": "1\n2\n3",
+  "codeMustInclude": [
+    "break"
+  ],
+  "simpleExplain": "break 就像循环里的“出口”，一执行，后面的循环次数都不再继续。",
+  "codeExplain": "先判断 n 是否等于 4，再决定 break；否则打印 n。",
+  "hints": [
+    "在 print 之前判断 n == 4。",
+    "条件成立时使用 break。",
+    "结构：if n == 4:\n    break\nprint(n)"
+  ]
+},
+{
+  "id": 20,
+  "stage": "列表",
+  "title": "通过下标取出列表元素",
+  "intro": "列表中的位置有编号，而且 Python 从 0 开始编号。",
+  "task": "给定 colors = [\"red\", \"green\", \"blue\"]，输出第二个元素 green。",
+  "concept": "列表下标从 0 开始，所以第二个元素的下标是 <code>1</code>。",
+  "starter": "colors = [\"red\", \"green\", \"blue\"]\n\n# 输出第二个元素\n",
+  "stdin": "",
+  "expected": "green",
+  "prediction": {
+    "question": "colors[0] 会得到什么？",
+    "options": [
+      "red",
+      "green",
+      "blue"
+    ],
+    "answer": "red",
+    "success": "对。Python 的列表下标从 0 开始。",
+    "fail": "记住：列表的第一个位置编号是 0。"
+  },
+  "simpleExplain": "人习惯从第 1 个开始数，但 Python 列表从 0 开始。",
+  "codeExplain": "colors[1] 就是在列表中取编号为 1 的元素，也就是第二个元素。",
+  "hints": [
+    "第二个元素不是下标 2。",
+    "列表从 0 开始编号。",
+    "试试：print(colors[1])"
+  ]
+},
+{
+  "id": 21,
+  "stage": "列表",
+  "title": "向列表追加数据",
+  "intro": "列表可以在运行过程中加入新元素。",
+  "task": "给 numbers = [1, 2] 追加 3，然后输出整个列表。",
+  "concept": "<code>append()</code> 会把一个元素添加到列表末尾。",
+  "starter": "numbers = [1, 2]\n\n# 追加 3，再输出 numbers\n",
+  "stdin": "",
+  "expected": "[1, 2, 3]",
+  "codeMustInclude": [
+    "append"
+  ],
+  "simpleExplain": "append 就是“追加到最后”，它会直接修改原来的列表。",
+  "codeExplain": "numbers.append(3) 执行后，numbers 变成 [1, 2, 3]。",
+  "hints": [
+    "列表有 append 方法。",
+    "调用方式是 numbers.append(...)。",
+    "先 numbers.append(3)，再 print(numbers)。"
+  ]
+},
+{
+  "id": 22,
+  "stage": "列表",
+  "title": "用切片取出一部分列表",
+  "intro": "切片能一次取出连续的一段数据。",
+  "task": "给定 nums = [10, 20, 30, 40, 50]，输出 [20, 30, 40]。",
+  "concept": "<code>列表[start:stop]</code> 包含 start，但不包含 stop。",
+  "starter": "nums = [10, 20, 30, 40, 50]\n\n# 使用切片输出中间三个元素\n",
+  "stdin": "",
+  "expected": "[20, 30, 40]",
+  "simpleExplain": "切片和 range 很像：左边包含，右边不包含。",
+  "codeExplain": "nums[1:4] 会取下标 1、2、3，对应 20、30、40。",
+  "hints": [
+    "20 的下标是 1。",
+    "40 的下标是 3，但 stop 不包含，所以要写 4。",
+    "试试：print(nums[1:4])"
+  ]
+},
+{
+  "id": 23,
+  "stage": "字典",
+  "title": "第一次使用字典",
+  "intro": "字典用“键 → 值”保存数据，适合描述有名字的属性。",
+  "task": "给定 student = {\"name\": \"小明\", \"score\": 95}，输出 95。",
+  "concept": "通过 <code>student[\"score\"]</code> 可以按键取出对应的值。",
+  "starter": "student = {\"name\": \"小明\", \"score\": 95}\n\n# 输出 score 对应的值\n",
+  "stdin": "",
+  "expected": "95",
+  "simpleExplain": "列表按位置找数据，字典按名字找数据。",
+  "codeExplain": "student[\"score\"] 表示查找键 score 对应的值。",
+  "hints": [
+    "不是用下标 0 或 1。",
+    "用字符串键 \"score\"。",
+    "试试：print(student[\"score\"])"
+  ]
+},
+{
+  "id": 24,
+  "stage": "字典 + 循环",
+  "title": "遍历字典的键和值",
+  "intro": "字典经常要成批读取，items() 可以同时拿到键和值。",
+  "task": "遍历 {\"OA\": 98.41, \"AA\": 97.32}，依次输出：OA 98.41 和 AA 97.32。",
+  "concept": "<code>dict.items()</code> 每次会给出一对 key 和 value。",
+  "starter": "metrics = {\"OA\": 98.41, \"AA\": 97.32}\n\n# 遍历键和值\n",
+  "stdin": "",
+  "expected": "OA 98.41\nAA 97.32",
+  "codeMustInclude": [
+    "items"
+  ],
+  "simpleExplain": "items() 可以把字典里的每一组“名字和值”一起拿出来。",
+  "codeExplain": "for key, value in metrics.items() 会依次得到 OA/98.41 和 AA/97.32。",
+  "hints": [
+    "使用 metrics.items()。",
+    "循环变量可以写 key, value。",
+    "循环里 print(key, value)。"
+  ]
+},
+{
+  "id": 25,
+  "stage": "函数",
+  "title": "让函数处理不同输入",
+  "intro": "函数真正的价值是，同一段逻辑可以处理不同数据。",
+  "task": "完成 square(x)，返回 x 的平方，让 print(square(6)) 输出 36。",
+  "concept": "参数 x 是函数接收到的输入，<code>return</code> 返回处理后的结果。",
+  "starter": "def square(x):\n    # 返回 x 的平方\n    pass\n\nprint(square(6))\n",
+  "stdin": "",
+  "expected": "36",
+  "simpleExplain": "square 像一个“平方机器”。传入 6，它应该把 6×6 的结果送回来。",
+  "codeExplain": "调用 square(6) 时，参数 x 临时等于 6。",
+  "hints": [
+    "平方可以写 x * x。",
+    "函数需要 return。",
+    "把 pass 改成：return x * x"
+  ]
+},
+{
+  "id": 26,
+  "stage": "函数",
+  "title": "理解默认参数",
+  "intro": "有些参数可以提供默认值，这样调用函数时可以少写一个参数。",
+  "task": "定义 greet(name, prefix=\"你好\")，让 print(greet(\"小明\")) 输出：你好 小明",
+  "concept": "参数写成 <code>prefix=\"你好\"</code> 后，不传 prefix 就会使用默认值。",
+  "starter": "def greet(name, prefix=\"你好\"):\n    # 返回两部分文字，中间一个空格\n    pass\n\nprint(greet(\"小明\"))\n",
+  "stdin": "",
+  "expected": "你好 小明",
+  "simpleExplain": "默认参数就是“没特别说明时先用这个值”。",
+  "codeExplain": "name 得到“小明”，prefix 没传，所以保持默认值“你好”。",
+  "hints": [
+    "函数应该返回字符串。",
+    "可以使用 f-string。",
+    "例如：return f\"{prefix} {name}\""
+  ]
+},
+{
+  "id": 27,
+  "stage": "Python 表达式",
+  "title": "用列表推导式生成新列表",
+  "intro": "读科研代码时经常会遇到一行生成列表的写法。",
+  "task": "使用列表推导式，把 [1, 2, 3, 4] 变成 [1, 4, 9, 16]。",
+  "concept": "<code>[x * x for x in numbers]</code> 可以把循环和列表创建写在一起。",
+  "starter": "numbers = [1, 2, 3, 4]\n\n# 使用列表推导式生成平方列表\n",
+  "stdin": "",
+  "expected": "[1, 4, 9, 16]",
+  "codeMustInclude": [
+    "for"
+  ],
+  "simpleExplain": "对 numbers 里的每个 x，计算 x*x，把结果装进新列表。",
+  "codeExplain": "阅读时先看 for：逐个取 x；再看左边：每个 x 要变成什么。",
+  "hints": [
+    "形式是 [表达式 for 变量 in 列表]。",
+    "表达式写 x * x。",
+    "试试：squares = [x * x for x in numbers]\nprint(squares)"
+  ]
+},
+{
+  "id": 28,
+  "stage": "异常处理",
+  "title": "第一次 try / except",
+  "intro": "程序出错并不一定要直接崩溃，可以对预期错误做处理。",
+  "task": "代码尝试 int(\"abc\")。使用 try/except 捕获 ValueError，并输出：输入无效",
+  "concept": "<code>try</code> 放可能出错的代码，<code>except</code> 处理指定错误。",
+  "starter": "# 使用 try / except 处理下面的转换\n# int(\"abc\") 会触发 ValueError\n",
+  "stdin": "",
+  "expected": "输入无效",
+  "codeMustInclude": [
+    "try",
+    "except"
+  ],
+  "simpleExplain": "try 可以理解成“先试试看”，出错后由 except 接住。",
+  "codeExplain": "int(\"abc\") 会产生 ValueError；except ValueError 可以专门处理它。",
+  "hints": [
+    "把 int(\"abc\") 放到 try 里。",
+    "捕获 ValueError。",
+    "except ValueError:\n    print(\"输入无效\")"
+  ]
+},
+{
+  "id": 29,
+  "stage": "Bug 修理厂",
+  "title": "修复下标越界 Bug",
+  "intro": "很常见的一类错误：循环次数比列表实际位置多了一次。",
+  "task": "修复下面代码，让它依次输出 a、b、c，不再出现 IndexError。",
+  "concept": "长度为 3 的列表，有效下标是 0、1、2。",
+  "starter": "items = [\"a\", \"b\", \"c\"]\n\nfor i in range(4):\n    print(items[i])\n",
+  "stdin": "",
+  "expected": "a\nb\nc",
+  "simpleExplain": "列表只有 3 个元素，但 range(4) 会产生 0、1、2、3，items[3] 并不存在。",
+  "codeExplain": "这是典型的 off-by-one（差一位）错误。",
+  "hints": [
+    "问题不是 print，而是循环范围。",
+    "可以使用 len(items)。",
+    "把 range(4) 改成 range(len(items))。"
+  ]
+},
+{
+  "id": 30,
+  "stage": "综合挑战",
+  "title": "计算一组实验结果的平均值",
+  "intro": "把变量、列表和运算组合起来，开始接近真实数据处理代码。",
+  "task": "给定 scores = [90, 80, 100]，计算并输出平均值 90.0。",
+  "concept": "平均值 = 总和 / 数量。可以用 <code>sum()</code> 和 <code>len()</code>。",
+  "starter": "scores = [90, 80, 100]\n\n# 计算并输出平均值\n",
+  "stdin": "",
+  "expected": "90.0",
+  "codeMustInclude": [
+    "scores"
+  ],
+  "simpleExplain": "先得到总和，再除以元素数量。",
+  "codeExplain": "sum(scores) 得到 270，len(scores) 得到 3；270 / 3 得到 90.0。",
+  "hints": [
+    "先想平均值公式。",
+    "Python 有 sum() 和 len()。",
+    "试试：print(sum(scores) / len(scores))"
+  ]
+}
 ];
