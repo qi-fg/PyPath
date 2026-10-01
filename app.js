@@ -61,6 +61,7 @@ let running = false;
 let monacoEditor = null;
 let suppressEditorSave = false;
 let appVersion = '3.0.0';
+let displayVersion = '3.0.0';
 let localServiceReady = false;
 let aiState = { enabled: false, configured: false, provider: '', model: '' };
 let lastRunOutput = '';
@@ -417,6 +418,8 @@ async function initLocalService() {
     const data = await resp.json();
     localServiceReady = !!data.ok;
     if (data.version) appVersion = data.version;
+    if (data.displayVersion) displayVersion = data.displayVersion;
+    else displayVersion = appVersion;
     if (data.ai) aiState = { ...aiState, ...data.ai };
     if (data.startupUpdate && data.startupUpdate.state === 'error') {
       const status = $('updateStatus');
@@ -714,9 +717,10 @@ async function loadVersionInfo() {
     if (resp.ok) {
       const info = await resp.json();
       appVersion = info.version || appVersion;
+      displayVersion = info.displayVersion || info.version || displayVersion;
     }
   } catch (_) {}
-  $('versionText').textContent = `V${appVersion}`;
+  $('versionText').textContent = `V${displayVersion}`;
 }
 
 function compareVersions(a, b) {
@@ -741,12 +745,13 @@ async function checkUpdates() {
     const manifestResp = await fetch(`${manifestUrl}${manifestUrl.includes('?') ? '&' : '?'}t=${Date.now()}`, { cache: 'no-store' });
     if (!manifestResp.ok) throw new Error('更新服务器无响应');
     const manifest = await manifestResp.json();
+    const remoteDisplayVersion = manifest.displayVersion || manifest.version;
     if (compareVersions(manifest.version, appVersion) > 0) {
-      status.textContent = `发现新版本 V${manifest.version}。可以直接点击“立即更新”，无需关闭网页。`;
+      status.textContent = `发现新版本 V${remoteDisplayVersion}。可以直接点击“立即更新”，无需关闭网页。`;
       $('onlineUpdateBtn').classList.remove('hidden');
-      $('onlineUpdateBtn').dataset.version = manifest.version;
+      $('onlineUpdateBtn').dataset.version = remoteDisplayVersion;
     } else {
-      status.textContent = `当前已经是最新版本 V${appVersion}。`;
+      status.textContent = `当前已经是最新版本 V${displayVersion}。`;
       $('onlineUpdateBtn').classList.add('hidden');
     }
   } catch (err) {
@@ -839,11 +844,11 @@ async function installOnlineUpdate() {
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok || !data.ok) throw new Error(data.error || `HTTP ${resp.status}`);
     if (!data.updated) {
-      status.textContent = `当前已经是最新版本 V${data.version || appVersion}。`;
+      status.textContent = `当前已经是最新版本 V${data.displayVersion || displayVersion}。`;
       btn.classList.add('hidden');
       return;
     }
-    status.textContent = `V${data.version} 已安装，正在重启 PyPath…`;
+    status.textContent = `V${data.displayVersion || data.version} 已安装，正在重启 PyPath…`;
     await fetch('/api/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const back = await waitForRestart();
     if (!back) throw new Error('更新已安装，但自动重启超时。请重新双击桌面 PyPath。');
@@ -887,7 +892,7 @@ async function installUpdatePackage(file) {
     });
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok || !data.ok) throw new Error(data.error || `HTTP ${resp.status}`);
-    status.textContent = `V${data.version} 已安装，正在自动重启 PyPath…`;
+    status.textContent = `V${data.displayVersion || data.version} 已安装，正在自动重启 PyPath…`;
     await fetch('/api/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const back = await waitForRestart();
     if (!back) throw new Error('更新已写入，但自动重启超时。请关闭后重新双击桌面 PyPath。');
