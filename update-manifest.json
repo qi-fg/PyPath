@@ -1,6 +1,6 @@
 {
-  "version": "2.2.0",
-  "downloadUrl": "https://github.com/qi-fg/PyPath/releases/download/v2.2.0/PyPath-V2.2.0.zip",
-  "sha256": "1dd323ff984b1d5f5005d36d580c1bc37daa0118f297966a6684bcda4be9fcde",
-  "notes": "PyPath V2.2.0"
+  "version": "2.2.1",
+  "downloadUrl": "https://github.com/qi-fg/PyPath/releases/download/v2.2.1/PyPath-V2.2.1.zip",
+  "sha256": "77d7518b0ba75a3fdafb46204fa6a12c55b81cd2d560976142dec536e43a6b66",
+  "notes": "PyPath V2.2.1"
 }
