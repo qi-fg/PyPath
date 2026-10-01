@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 echo ==============================
-echo PyPath Debug Start V2.1.0
+echo PyPath Debug Start V3.0.0
 echo ==============================
 echo.
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
