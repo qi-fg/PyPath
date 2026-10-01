@@ -1,0 +1,50 @@
+name: Sync PyPath package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "releases/PyPath-V*.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract newest package into repository root
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$(ls releases/PyPath-V*.zip | sort -V | tail -n 1)"
+          rm -rf /tmp/pypath-package
+          mkdir -p /tmp/pypath-package
+          unzip -q "$ZIP" -d /tmp/pypath-package
+          VERSION_FILE="$(find /tmp/pypath-package -name version.json -type f | head -n 1)"
+          if [ -z "$VERSION_FILE" ]; then
+            echo "version.json not found in package"
+            exit 1
+          fi
+          PAYLOAD="$(dirname "$VERSION_FILE")"
+          test -f "$PAYLOAD/index.html"
+          rsync -a --exclude "user-data" "$PAYLOAD/" ./
+
+      - name: Commit synced source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No source changes."
+          else
+            VERSION="$(python -c "import json; print(json.load(open('version.json', encoding='utf-8'))['version'])")"
+            git commit -m "Sync PyPath V$VERSION source"
+            git push
+          fi
