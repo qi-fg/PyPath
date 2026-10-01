@@ -1,50 +1,106 @@
-name: Sync PyPath package
+name: Publish PyPath package
 
 on:
   push:
     branches: [main]
     paths:
-      - "releases/PyPath-V*.zip"
+      - "release-trigger.json"
 
 permissions:
   contents: write
 
 jobs:
-  sync:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Extract newest package into repository root
+      - name: Rebuild and verify package
         shell: bash
         run: |
           set -euo pipefail
-          ZIP="$(ls releases/PyPath-V*.zip | sort -V | tail -n 1)"
-          rm -rf /tmp/pypath-package
-          mkdir -p /tmp/pypath-package
-          unzip -q "$ZIP" -d /tmp/pypath-package
-          VERSION_FILE="$(find /tmp/pypath-package -name version.json -type f | head -n 1)"
-          if [ -z "$VERSION_FILE" ]; then
-            echo "version.json not found in package"
-            exit 1
-          fi
+          VERSION="$(python - <<'PY'
+import json
+print(json.load(open('release-trigger.json', encoding='utf-8'))['version'])
+PY
+)"
+          EXPECTED_SHA="$(python - <<'PY'
+import json
+print(json.load(open('release-trigger.json', encoding='utf-8'))['sha256'])
+PY
+)"
+          NOTES="$(python - <<'PY'
+import json
+print(json.load(open('release-trigger.json', encoding='utf-8')).get('notes','PyPath update'))
+PY
+)"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "EXPECTED_SHA=$EXPECTED_SHA" >> "$GITHUB_ENV"
+          {
+            echo "RELEASE_NOTES<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+          mkdir -p /tmp/pypath-release
+          cat .release-parts/PyPath-V"$VERSION".part*.b64 | tr -d '\r\n' | base64 -d > /tmp/pypath-release/PyPath-V"$VERSION".zip
+          ACTUAL_SHA="$(sha256sum /tmp/pypath-release/PyPath-V"$VERSION".zip | awk '{print $1}')"
+          echo "Expected: $EXPECTED_SHA"
+          echo "Actual:   $ACTUAL_SHA"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
+
+          rm -rf /tmp/pypath-unpacked
+          mkdir -p /tmp/pypath-unpacked
+          unzip -q /tmp/pypath-release/PyPath-V"$VERSION".zip -d /tmp/pypath-unpacked
+          VERSION_FILE="$(find /tmp/pypath-unpacked -name version.json -type f | head -n 1)"
+          test -n "$VERSION_FILE"
           PAYLOAD="$(dirname "$VERSION_FILE")"
           test -f "$PAYLOAD/index.html"
-          rsync -a --exclude "user-data" "$PAYLOAD/" ./
+          rsync -a --exclude "user-data" --exclude ".github" "$PAYLOAD/" ./
 
-      - name: Commit synced source
+      - name: Prepare online update manifest
+        shell: bash
+        run: |
+          python - <<'PY'
+import json, os
+version = os.environ["VERSION"]
+sha = os.environ["EXPECTED_SHA"]
+notes = os.environ["RELEASE_NOTES"]
+manifest = {
+    "version": version,
+    "downloadUrl": f"https://github.com/qi-fg/PyPath/releases/download/v{version}/PyPath-V{version}.zip",
+    "sha256": sha,
+    "notes": notes
+}
+with open("update-manifest.json", "w", encoding="utf-8") as f:
+    json.dump(manifest, f, ensure_ascii=False, indent=2)
+    f.write("\n")
+PY
+          rm -f releases/PyPath-V"$VERSION".zip || true
+
+      - name: Commit source and manifest
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          if git diff --cached --quiet; then
-            echo "No source changes."
-          else
-            VERSION="$(python -c "import json; print(json.load(open('version.json', encoding='utf-8'))['version'])")"
-            git commit -m "Sync PyPath V$VERSION source"
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish PyPath V$VERSION source"
             git push
+          fi
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="/tmp/pypath-release/PyPath-V$VERSION.zip"
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release upload "v$VERSION" "$ZIP" --clobber
+          else
+            gh release create "v$VERSION" "$ZIP" --title "PyPath V$VERSION" --notes "$RELEASE_NOTES"
           fi
