@@ -44,7 +44,7 @@ function loadState() {
     next.curriculumVersion = 3;
     next.legacyMigrated = stage1Complete;
 
-    for (let id = 1; id <= 12; id++) {
+    for (let id = 1; id <= 30; id++) {
       localStorage.removeItem(`pypath-code-${id}`);
       localStorage.removeItem(`pypath-stdin-${id}`);
     }
