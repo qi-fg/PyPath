@@ -146,7 +146,7 @@ addEngineeringStage(3, [
     "task": "score=70，用一行条件表达式得到 status='pass'，并输出 pass。",
     "concept": "条件表达式 x if cond else y",
     "starter": "score = 70\n# 一行得到 status\n\nprint(status)\n",
-    "solution": "status = 'pass' if score >= 60 else 'fail'\nprint(status)",
+    "solution": "score = 70\nstatus = 'pass' if score >= 60 else 'fail'\nprint(status)",
     "expected": "pass",
     "why": "简单的二选一赋值可以用条件表达式保持简洁。",
     "walk": "条件 score>=60 为 True，所以表达式选择左侧 pass。",
