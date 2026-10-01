@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light" />
   <title>PyPath · Python 训练场</title>
-  <link rel="stylesheet" href="styles.css?v=2.1.2" />
+  <link rel="stylesheet" href="styles.css?v=2.2.1" />
 </head>
 <body>
   <header class="topbar">
@@ -100,6 +100,53 @@
           <pre id="consoleOutput" class="console">Python 正在初始化，请稍候…</pre>
           <div id="feedbackBox" class="feedback neutral">写完代码后点击“运行代码”。</div>
           <button id="nextBtn" class="btn success next-btn hidden">下一关 →</button>
+        </section>
+
+        <section id="solutionPanel" class="solution-panel panel hidden">
+          <div class="solution-head">
+            <div>
+              <span id="solutionKicker" class="solution-kicker">本题详解</span>
+              <h2 id="solutionTitle">为什么这道题这样写？</h2>
+            </div>
+            <span class="solution-done">✓ 已掌握</span>
+          </div>
+
+          <div class="solution-grid">
+            <article class="solution-block solution-code-block">
+              <h3>你的通过代码</h3>
+              <pre id="solutionUserCode" class="solution-code"></pre>
+            </article>
+
+            <article class="solution-block">
+              <h3>这题在考什么</h3>
+              <p id="solutionConcept"></p>
+            </article>
+
+            <article class="solution-block">
+              <h3>为什么这样写</h3>
+              <p id="solutionWhy"></p>
+            </article>
+
+            <article class="solution-block">
+              <h3>程序是怎么一步步执行的</h3>
+              <p id="solutionWalkthrough"></p>
+            </article>
+
+            <article class="solution-block">
+              <h3>常见错误</h3>
+              <ul id="solutionPitfalls" class="solution-list"></ul>
+            </article>
+
+            <article class="solution-block solution-takeaway">
+              <h3>这一题真正要记住</h3>
+              <p id="solutionTakeaway"></p>
+            </article>
+          </div>
+
+          <div id="bossReview" class="boss-review hidden">
+            <strong>👑 BOSS 复盘</strong>
+            <p id="bossReviewText"></p>
+          </div>
         </section>
       </section>
 
@@ -248,8 +295,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
-  <script src="lessons.js?v=2.1.2"></script>
+  <script src="lessons.js?v=2.2.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.57.0/min/vs/loader.js"></script>
-  <script src="app.js?v=2.1.2"></script>
+  <script src="app.js?v=2.2.1"></script>
 </body>
 </html>
