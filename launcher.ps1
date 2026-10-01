@@ -10,6 +10,21 @@ $updater = Join-Path $root 'updater.ps1'
 
 if (Test-Path $updater) {
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File $updater -Root $root | Out-Null
+
+    $updateStatusFile = Join-Path $root 'update-status.json'
+    if (Test-Path $updateStatusFile) {
+        try {
+            $updateStatus = Get-Content $updateStatusFile -Raw | ConvertFrom-Json
+            if ($updateStatus.state -eq 'updated' -and (Test-Path $pidFile)) {
+                $oldPid = [int](Get-Content $pidFile -Raw).Trim()
+                $oldProc = Get-Process -Id $oldPid -ErrorAction SilentlyContinue
+                if ($oldProc) {
+                    Stop-Process -Id $oldPid -Force -ErrorAction SilentlyContinue
+                    Start-Sleep -Milliseconds 700
+                }
+            }
+        } catch {}
+    }
 }
 
 function Test-TcpPort([int]$Port) {
