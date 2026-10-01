@@ -13,7 +13,7 @@ addEngineeringStage(12, [
     "task": "Dog 继承 Animal，并重写 speak() 返回 woof。",
     "concept": "override 方法重写",
     "starter": "class Animal:\n    def speak(self):\n        return '?'\n\nclass Dog(Animal):\n    # 重写 speak\n    pass\n\nprint(Dog().speak())\n",
-    "solution": "class Dog(Animal):\n    def speak(self):\n        return 'woof'\n\nprint(Dog().speak())",
+    "solution": "class Animal:\n    def speak(self):\n        return '?'\n\nclass Dog(Animal):\n    def speak(self):\n        return 'woof'\n\nprint(Dog().speak())",
     "expected": "woof",
     "why": "子类可以提供与父类同名方法改变具体行为。"
   },
@@ -22,7 +22,7 @@ addEngineeringStage(12, [
     "task": "Employee 继承 Person，用 super().__init__(name) 初始化 name，再保存 role。输出 Ada dev。",
     "concept": "super() 调用父类实现",
     "starter": "class Person:\n    def __init__(self, name):\n        self.name = name\n\nclass Employee(Person):\n    def __init__(self, name, role):\n        pass\n\ne = Employee('Ada', 'dev')\nprint(e.name, e.role)\n",
-    "solution": "class Employee(Person):\n    def __init__(self, name, role):\n        super().__init__(name)\n        self.role = role\n\ne = Employee('Ada', 'dev')\nprint(e.name, e.role)",
+    "solution": "class Person:\n    def __init__(self, name):\n        self.name = name\n\nclass Employee(Person):\n    def __init__(self, name, role):\n        super().__init__(name)\n        self.role = role\n\ne = Employee('Ada', 'dev')\nprint(e.name, e.role)",
     "expected": "Ada dev",
     "must": [
       "super"
@@ -34,7 +34,7 @@ addEngineeringStage(12, [
     "task": "Engine.start() 返回 on；Car 内部拥有 Engine，并让 car.start() 输出 on。",
     "concept": "composition 组合对象",
     "starter": "class Engine:\n    def start(self):\n        return 'on'\n\nclass Car:\n    def __init__(self):\n        # 保存 Engine 实例\n        pass\n    def start(self):\n        pass\n\nprint(Car().start())\n",
-    "solution": "class Car:\n    def __init__(self):\n        self.engine = Engine()\n    def start(self):\n        return self.engine.start()\n\nprint(Car().start())",
+    "solution": "class Engine:\n    def start(self):\n        return 'on'\n\nclass Car:\n    def __init__(self):\n        self.engine = Engine()\n    def start(self):\n        return self.engine.start()\n\nprint(Car().start())",
     "expected": "on",
     "why": "组合表达“拥有一个”关系，通常比为了复用强行继承更灵活。"
   },
