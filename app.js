@@ -1,7 +1,7 @@
 const lessons = window.LESSONS || [];
 const $ = (id) => document.getElementById(id);
 const STORAGE_KEY = 'pypath-state';
-const APP_DATA_FORMAT = 3;
+const APP_DATA_FORMAT = 4;
 
 function freshState() {
   return {
@@ -12,7 +12,10 @@ function freshState() {
     predictions: {},
     stats: { syntaxErrors: 0, runtimeErrors: 0, wrongAnswers: 0, hintUses: 0 },
     lastStudyDate: null,
-    streak: 1
+    streak: 1,
+    curriculumVersion: 3,
+    openStageId: 1,
+    legacyMigrated: false
   };
 }
 
@@ -21,15 +24,35 @@ function loadState() {
   try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (_) {}
   const base = freshState();
   if (!saved || typeof saved !== 'object') return base;
-  return {
+
+  const next = {
     ...base,
     ...saved,
-    solved: Array.isArray(saved.solved) ? saved.solved : [],
+    solved: Array.isArray(saved.solved) ? saved.solved.filter(Number.isInteger) : [],
     attemptsByLesson: saved.attemptsByLesson || {},
     hintLevelByLesson: saved.hintLevelByLesson || {},
     predictions: saved.predictions || {},
     stats: { ...base.stats, ...(saved.stats || {}) }
   };
+
+  if (Number(saved.curriculumVersion || 0) < 3) {
+    const legacySolved = new Set(next.solved);
+    const stage1Complete = Array.from({ length: 12 }, (_, i) => i).every(i => legacySolved.has(i));
+    next.solved = Array.from({ length: 12 }, (_, i) => i).filter(i => legacySolved.has(i));
+    next.current = stage1Complete ? 12 : Math.min(Number(next.current) || 0, 11);
+    next.openStageId = stage1Complete ? 2 : 1;
+    next.curriculumVersion = 3;
+    next.legacyMigrated = stage1Complete;
+
+    for (let id = 1; id <= 12; id++) {
+      localStorage.removeItem(`pypath-code-${id}`);
+      localStorage.removeItem(`pypath-stdin-${id}`);
+    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch (_) {}
+  }
+
+  next.current = Math.max(0, Math.min(Number(next.current) || 0, Math.max(0, lessons.length - 1)));
+  return next;
 }
 
 const state = loadState();
@@ -37,7 +60,7 @@ let pyodide = null;
 let running = false;
 let monacoEditor = null;
 let suppressEditorSave = false;
-let appVersion = '2.1.0';
+let appVersion = '3.0.0';
 let localServiceReady = false;
 let aiState = { enabled: false, configured: false, provider: '', model: '' };
 let lastRunOutput = '';
@@ -88,24 +111,97 @@ function updateStreak() {
   saveState();
 }
 
+function stageEntries(stageId) {
+  return lessons.map((lesson, idx) => ({ lesson, idx })).filter(x => x.lesson.stageId === stageId);
+}
+
+function stageBossIndex(stageId) {
+  const entries = stageEntries(stageId);
+  const boss = entries.find(x => x.lesson.boss) || entries[entries.length - 1];
+  return boss ? boss.idx : -1;
+}
+
+function isStageComplete(stageId) {
+  const bossIdx = stageBossIndex(stageId);
+  return bossIdx >= 0 && state.solved.includes(bossIdx);
+}
+
+function isStageUnlocked(stageId) {
+  return stageId === 1 || isStageComplete(stageId - 1);
+}
+
 function renderLessonList() {
   const list = $('lessonList');
+  const stages = window.COURSE_STAGES || [];
   list.innerHTML = '';
-  lessons.forEach((lesson, idx) => {
-    const btn = document.createElement('button');
-    const solved = state.solved.includes(idx);
-    const unlocked = idx === 0 || state.solved.includes(idx - 1) || solved || idx <= state.current;
-    btn.className = 'lesson-item' + (idx === state.current ? ' active' : '') + (solved ? ' solved' : '') + (!unlocked ? ' locked' : '');
-    btn.innerHTML = `<span class="lesson-label">${lesson.id}. ${lesson.title}</span>`;
-    btn.disabled = !unlocked;
-    btn.addEventListener('click', () => {
-      if (!unlocked || idx === state.current) return;
-      state.current = idx;
+  list.classList.add('stage-route-list');
+
+  stages.forEach(stage => {
+    const entries = stageEntries(stage.id);
+    if (!entries.length) return;
+
+    const unlocked = isStageUnlocked(stage.id);
+    const complete = isStageComplete(stage.id);
+    const solvedCount = entries.filter(x => state.solved.includes(x.idx)).length;
+    const currentInStage = currentLesson() && currentLesson().stageId === stage.id;
+    const expanded = unlocked && (state.openStageId === stage.id || (!state.openStageId && currentInStage));
+
+    const group = document.createElement('section');
+    group.className = 'stage-route-group' + (complete ? ' complete' : '') + (!unlocked ? ' locked' : '') + (currentInStage ? ' current' : '');
+
+    const head = document.createElement('button');
+    head.type = 'button';
+    head.className = 'stage-route-head';
+    head.disabled = !unlocked;
+    const statusIcon = complete ? '✓' : (!unlocked ? '🔒' : (currentInStage ? '▶' : stage.icon));
+    head.innerHTML = `
+      <span class="stage-route-icon">${statusIcon}</span>
+      <span class="stage-route-copy">
+        <strong>阶段 ${stage.id} · ${stage.title}</strong>
+        <small>${stage.subtitle}</small>
+      </span>
+      <span class="stage-route-meta">
+        <b>${solvedCount}/${entries.length}</b>
+        <span>${complete ? 'BOSS 已通关' : (!unlocked ? '未解锁' : (expanded ? '收起' : '展开'))}</span>
+      </span>
+    `;
+    head.addEventListener('click', () => {
+      if (!unlocked) return;
+      state.openStageId = state.openStageId === stage.id ? 0 : stage.id;
       saveState();
-      renderAll();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderLessonList();
     });
-    list.appendChild(btn);
+    group.appendChild(head);
+
+    if (expanded) {
+      const lessonsBox = document.createElement('div');
+      lessonsBox.className = 'stage-lessons';
+      entries.forEach((entry, order) => {
+        const { lesson, idx } = entry;
+        const solved = state.solved.includes(idx);
+        const previousSolved = order === 0 ? true : state.solved.includes(entries[order - 1].idx);
+        const lessonUnlocked = solved || previousSolved;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'lesson-item' + (idx === state.current ? ' active' : '') + (solved ? ' solved' : '') + (!lessonUnlocked ? ' locked' : '') + (lesson.boss ? ' boss-item' : '');
+        btn.disabled = !lessonUnlocked;
+        const marker = lesson.boss ? '👑' : (solved ? '✓' : (lessonUnlocked ? String(order + 1) : '🔒'));
+        btn.innerHTML = `<span class="lesson-marker">${marker}</span><span class="lesson-label">${lesson.title}</span>`;
+        btn.addEventListener('click', () => {
+          if (!lessonUnlocked || idx === state.current) return;
+          state.current = idx;
+          state.openStageId = stage.id;
+          saveState();
+          renderAll();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        lessonsBox.appendChild(btn);
+      });
+      group.appendChild(lessonsBox);
+    }
+
+    list.appendChild(group);
   });
 }
 
@@ -142,8 +238,14 @@ function renderPrediction(lesson) {
 function renderCurrentLesson() {
   const lesson = currentLesson();
   if (!lesson) return;
-  $('lessonStage').textContent = lesson.stage;
-  $('lessonProgressText').textContent = `第 ${lesson.id} 关 / ${lessons.length} 关`;
+  const stage = (window.COURSE_STAGES || []).find(s => s.id === lesson.stageId);
+
+  $('lessonPanel')?.classList?.toggle('boss-lesson', !!lesson.boss);
+  document.querySelector('.lesson-panel')?.classList.toggle('boss-lesson', !!lesson.boss);
+  $('lessonStage').textContent = lesson.boss
+    ? `👑 阶段 ${lesson.stageId} BOSS`
+    : `${stage?.icon || '📘'} 阶段 ${lesson.stageId} · ${lesson.stage}`;
+  $('lessonProgressText').textContent = `本阶段 ${lesson.stageOrder}/12 · 总第 ${lesson.id}/${lessons.length} 关`;
   $('lessonTitle').textContent = lesson.title;
   $('lessonIntro').textContent = lesson.intro;
   $('lessonTask').textContent = lesson.task;
@@ -160,8 +262,12 @@ function renderCurrentLesson() {
   $('consoleOutput').textContent = pyodide ? '准备好了。点击“运行代码”。' : 'Python 正在初始化，请稍候…';
   const solved = state.solved.includes(state.current);
   $('feedbackBox').className = solved ? 'feedback good' : 'feedback neutral';
-  $('feedbackBox').textContent = solved ? '✅ 这一关已经通过。你可以继续修改代码练习，或者进入下一关。' : '写完代码后点击“运行代码”。';
+  $('feedbackBox').textContent = solved
+    ? (lesson.boss ? '👑 BOSS CLEAR！这个阶段已经通关，下一阶段已解锁。' : '✅ 这一关已经通过。下面可以查看完整详解。')
+    : (lesson.boss ? '👑 BOSS 关：尽量先自己组合本阶段知识，再使用提示。' : '写完代码后点击“运行代码”。');
+
   $('nextBtn').classList.toggle('hidden', !solved || state.current >= lessons.length - 1);
+  $('nextBtn').textContent = lesson.boss ? '进入下一阶段 →' : '下一关 →';
   if (solved) renderSolutionExplanation(lesson, code);
   else hideSolutionExplanation();
   $('attemptsText').textContent = `尝试 ${state.attemptsByLesson[lesson.id] || 0} 次`;
@@ -176,9 +282,18 @@ function renderCurrentLesson() {
 
   renderPrediction(lesson);
   clearTutor(false);
-  tutorSay(`这一关我们只专注一个目标：${lesson.task}\n\n先自己改代码。卡住了再点“我看不懂”或“给一点提示”。`);
-}
+  tutorSay(
+    lesson.boss
+      ? `这是“${lesson.stage}”的阶段 BOSS：${lesson.task}\n\n先自己设计步骤。卡住后再逐级使用提示。`
+      : `这一关我们只专注一个目标：${lesson.task}\n\n先自己改代码。卡住了再点“我看不懂”或“给一点提示”。`
+  );
 
+  if (state.legacyMigrated) {
+    tutorSay('已根据你旧版 12/12 的完成记录，自动认定第 1 阶段通关，并从第 2 阶段继续。旧题代码没有硬套到新课程，避免任务和代码错位。', 'system');
+    state.legacyMigrated = false;
+    saveState();
+  }
+}
 
 function plainConcept(lesson) {
   const temp = document.createElement('div');
@@ -209,6 +324,9 @@ function renderSolutionExplanation(lesson, code = getCode()) {
   $('solutionKicker').textContent = lesson.boss ? '阶段 BOSS 详解' : '本题详解';
   $('solutionTitle').textContent = lesson.boss ? '把这一阶段的知识串起来' : '为什么这道题这样写？';
   $('solutionUserCode').textContent = String(code || '').trim() || '(没有代码)';
+  if ($('solutionReferenceCode')) {
+    $('solutionReferenceCode').textContent = String(lesson.solution || lesson.hints?.[2] || '').replace(/^参考实现：\s*/, '').trim() || '(这题没有唯一参考实现)';
+  }
   $('solutionConcept').textContent = lesson.detailConcept || plainConcept(lesson) || lesson.task;
   $('solutionWhy').textContent = lesson.detailWhy || lesson.simpleExplain || lesson.codeExplain || '先理解代码里每个变量和操作分别负责什么。';
   $('solutionWalkthrough').textContent = lesson.walkthrough || lesson.codeExplain || lesson.simpleExplain || '从第一行开始，按 Python 实际执行顺序逐行理解。';
@@ -240,18 +358,23 @@ function hideSolutionExplanation() {
 
 function renderStats() {
   const solved = state.solved.length;
+  const stages = window.COURSE_STAGES || [];
+  const completedStages = stages.filter(stage => isStageComplete(stage.id)).length;
+  const currentStage = currentLesson()?.stageId || 1;
+
   $('solvedCount').textContent = solved;
   $('totalCount').textContent = lessons.length;
   $('streak').textContent = state.streak || 1;
-  $('levelBadge').textContent = `Lv.${Math.max(1, Math.floor(solved / 3) + 1)}`;
+  $('levelBadge').textContent = `Lv.${Math.max(1, currentStage)}`;
   $('syntaxErrors').textContent = state.stats.syntaxErrors || 0;
   $('runtimeErrors').textContent = state.stats.runtimeErrors || 0;
   $('wrongAnswers').textContent = state.stats.wrongAnswers || 0;
   $('hintUses').textContent = state.stats.hintUses || 0;
+
   const pct = lessons.length ? Math.round((solved / lessons.length) * 100) : 0;
   $('progressFill').style.width = `${pct}%`;
   $('progressPercent').textContent = `${pct}%`;
-  $('courseProgressSmall').textContent = `${pct}%`;
+  $('courseProgressSmall').textContent = `${completedStages}/${stages.length} 阶段`;
 }
 
 function renderAll() {
@@ -442,9 +565,17 @@ async function runCode() {
       if (!state.solved.includes(state.current)) state.solved.push(state.current);
       state.solved.sort((a, b) => a - b);
       $('feedbackBox').className = 'feedback good';
-      $('feedbackBox').textContent = '✅ 挑战成功。你不是只“看懂了”，而是真的把代码跑通了。';
+      $('feedbackBox').textContent = lesson.boss
+        ? '👑 BOSS CLEAR！本阶段已经通关，下一阶段已解锁。'
+        : '✅ 挑战成功。下面已经生成本题完整详解。';
       $('nextBtn').classList.toggle('hidden', state.current >= lessons.length - 1);
-      tutorSay('很好，这次程序的实际输出和目标一致。先看一眼你刚刚改的那一行，确认自己知道为什么它现在能工作。', 'good');
+      $('nextBtn').textContent = lesson.boss ? '进入下一阶段 →' : '下一关 →';
+      tutorSay(
+        lesson.boss
+          ? 'BOSS 已击败。先看完整复盘，确认自己知道每个部分为什么这样写，再进入下一阶段。'
+          : '很好，程序已经跑通。现在看下面的详解，对照你的代码和参考实现，确认自己是真的理解了。',
+        'good'
+      );
       renderSolutionExplanation(lesson, code);
       setTimeout(() => {
         const panel = $('solutionPanel');
@@ -867,6 +998,7 @@ $('tutorInput').addEventListener('keydown', (e) => {
 $('nextBtn').addEventListener('click', () => {
   if (state.current < lessons.length - 1 && state.solved.includes(state.current)) {
     state.current += 1;
+    state.openStageId = currentLesson()?.stageId || state.openStageId;
     saveState();
     renderAll();
     window.scrollTo({ top: 0, behavior: 'smooth' });
