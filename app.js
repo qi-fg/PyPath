@@ -15,7 +15,12 @@ function freshState() {
     streak: 1,
     curriculumVersion: 3,
     openStageId: 1,
-    legacyMigrated: false
+    legacyMigrated: false,
+    masteryByLesson: {},
+    reviewQueue: [],
+    stageResults: {},
+    hiddenFailures: {},
+    clientUpdatedAt: 0
   };
 }
 
@@ -32,6 +37,10 @@ function loadState() {
     attemptsByLesson: saved.attemptsByLesson || {},
     hintLevelByLesson: saved.hintLevelByLesson || {},
     predictions: saved.predictions || {},
+    masteryByLesson: saved.masteryByLesson || {},
+    reviewQueue: Array.isArray(saved.reviewQueue) ? saved.reviewQueue : [],
+    stageResults: saved.stageResults || {},
+    hiddenFailures: saved.hiddenFailures || {},
     stats: { ...base.stats, ...(saved.stats || {}) }
   };
 
@@ -67,9 +76,56 @@ let aiState = { enabled: false, configured: false, provider: '', model: '' };
 let lastRunOutput = '';
 let lastRunError = '';
 let tutorBusy = false;
+let learningDataSynced = false;
+let learningSaveTimer = null;
+const learningCache = { codeByLesson: {}, stdinByLesson: {} };
 
-function saveState() {
+function collectLocalLearningCache() {
+  const codeByLesson = {};
+  const stdinByLesson = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key) continue;
+    if (key.startsWith('pypath-code-')) codeByLesson[key.slice('pypath-code-'.length)] = localStorage.getItem(key) || '';
+    if (key.startsWith('pypath-stdin-')) stdinByLesson[key.slice('pypath-stdin-'.length)] = localStorage.getItem(key) || '';
+  }
+  return { codeByLesson, stdinByLesson };
+}
+
+function learningPayload() {
+  return {
+    schema: 1,
+    clientUpdatedAt: Number(state.clientUpdatedAt || Date.now()),
+    state: JSON.parse(JSON.stringify(state)),
+    codeByLesson: { ...learningCache.codeByLesson },
+    stdinByLesson: { ...learningCache.stdinByLesson }
+  };
+}
+
+function scheduleLearningSave() {
+  if (!localServiceReady || !learningDataSynced) return;
+  clearTimeout(learningSaveTimer);
+  learningSaveTimer = setTimeout(async () => {
+    try {
+      await fetch('/api/learning-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: learningPayload() })
+      });
+      const status = $('learningStorageStatus');
+      if (status) status.textContent = '已保存到 PyPath 本地数据文件，并保留浏览器副本。';
+    } catch (_) {
+      const status = $('learningStorageStatus');
+      if (status) status.textContent = '本地数据文件暂时无法写入，浏览器副本仍然保留。';
+    }
+  }, 700);
+}
+
+function saveState(options = {}) {
+  const touch = options.touch !== false;
+  if (touch) state.clientUpdatedAt = Date.now();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (options.sync !== false) scheduleLearningSave();
 }
 
 function normalized(text) {
@@ -94,7 +150,10 @@ function currentLesson() {
 function saveCurrentCode() {
   const lesson = currentLesson();
   if (!lesson || suppressEditorSave) return;
-  localStorage.setItem(`pypath-code-${lesson.id}`, getCode());
+  const value = getCode();
+  localStorage.setItem(`pypath-code-${lesson.id}`, value);
+  learningCache.codeByLesson[String(lesson.id)] = value;
+  saveState();
 }
 
 function updateStreak() {
@@ -252,8 +311,13 @@ function renderCurrentLesson() {
   $('lessonTask').textContent = lesson.task;
   $('conceptBox').innerHTML = lesson.concept;
 
-  const code = localStorage.getItem(`pypath-code-${lesson.id}`) ?? lesson.starter;
-  const stdin = localStorage.getItem(`pypath-stdin-${lesson.id}`) ?? lesson.stdin;
+  const codeKey = String(lesson.id);
+  const code = Object.prototype.hasOwnProperty.call(learningCache.codeByLesson, codeKey)
+    ? learningCache.codeByLesson[codeKey]
+    : (localStorage.getItem(`pypath-code-${lesson.id}`) ?? lesson.starter);
+  const stdin = Object.prototype.hasOwnProperty.call(learningCache.stdinByLesson, codeKey)
+    ? learningCache.stdinByLesson[codeKey]
+    : (localStorage.getItem(`pypath-stdin-${lesson.id}`) ?? lesson.stdin);
   setCode(code);
   $('stdinInput').value = stdin;
 
@@ -972,7 +1036,10 @@ $('codeEditor').addEventListener('keydown', (e) => {
 $('codeEditor').addEventListener('input', saveCurrentCode);
 $('stdinInput').addEventListener('input', () => {
   const lesson = currentLesson();
-  localStorage.setItem(`pypath-stdin-${lesson.id}`, $('stdinInput').value);
+  const value = $('stdinInput').value;
+  localStorage.setItem(`pypath-stdin-${lesson.id}`, value);
+  learningCache.stdinByLesson[String(lesson.id)] = value;
+  saveState();
 });
 
 $('runBtn').addEventListener('click', runCode);
@@ -982,6 +1049,9 @@ $('resetBtn').addEventListener('click', () => {
   $('stdinInput').value = lesson.stdin;
   localStorage.removeItem(`pypath-code-${lesson.id}`);
   localStorage.removeItem(`pypath-stdin-${lesson.id}`);
+  delete learningCache.codeByLesson[String(lesson.id)];
+  delete learningCache.stdinByLesson[String(lesson.id)];
+  saveState();
   $('consoleOutput').textContent = '已恢复本关初始代码。';
   $('feedbackBox').className = 'feedback neutral';
   $('feedbackBox').textContent = '重新来一次。';
