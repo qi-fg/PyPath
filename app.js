@@ -689,44 +689,177 @@ function tutorForError(message) {
   return '先读控制台最后一行，再对照你刚改过的那一小段。不要一次改很多地方，这样更容易定位问题。';
 }
 
+function upsertReview(lesson, reason, delayHours) {
+  if (!lesson) return;
+  const now = Date.now();
+  const hours = Number(delayHours || (reason === 'solved' ? 72 : 24));
+  const dueAt = now + hours * 3600 * 1000;
+  const existing = (state.reviewQueue || []).find(item => item.lessonId === lesson.id);
+  if (existing) {
+    existing.reason = reason;
+    existing.dueAt = Math.min(Number(existing.dueAt || dueAt), dueAt);
+    existing.updatedAt = now;
+  } else {
+    state.reviewQueue.push({ lessonId: lesson.id, reason, dueAt, createdAt: now, updatedAt: now });
+  }
+}
+
+function dueReviewItems() {
+  const now = Date.now();
+  return (state.reviewQueue || [])
+    .filter(item => Number(item.dueAt || 0) <= now)
+    .filter(item => lessons.some(lesson => lesson.id === item.lessonId))
+    .sort((a, b) => Number(a.dueAt || 0) - Number(b.dueAt || 0));
+}
+
+function updateReviewBadge() {
+  const due = dueReviewItems().length;
+  const count = $('reviewCount');
+  const btn = $('reviewBtn');
+  if (count) count.textContent = String(due);
+  if (btn) btn.classList.toggle('has-review', due > 0);
+}
+
+function lessonMasteryScore(lesson) {
+  const attempts = Number(state.attemptsByLesson[lesson.id] || 0);
+  const hints = Number(state.hintLevelByLesson[lesson.id] || 0);
+  const hiddenFails = Number(state.hiddenFailures[lesson.id] || 0);
+  let score = 100;
+  score -= Math.max(0, attempts - 1) * 7;
+  score -= hints * 10;
+  score -= hiddenFails * 8;
+  return Math.max(35, Math.min(100, score));
+}
+
+function markLessonSolved(lesson) {
+  if (!state.solved.includes(state.current)) state.solved.push(state.current);
+  state.solved.sort((a, b) => a - b);
+  const mastery = lessonMasteryScore(lesson);
+  state.masteryByLesson[lesson.id] = mastery;
+  upsertReview(lesson, mastery < 75 ? 'weak' : 'solved', mastery < 75 ? 24 : 72);
+}
+
+async function executeBrowserCase(code, stdinText) {
+  if (!pyodide) return { stdout: '', stderr: '', error: '浏览器 Python 尚未就绪', timedOut: false };
+  const stdinLines = String(stdinText || '') === '' ? [] : String(stdinText).split(/\r?\n/);
+  const out = [];
+  const errOut = [];
+  let inputIndex = 0;
+  try {
+    pyodide.setStdout({ batched: (s) => out.push(s) });
+    pyodide.setStderr({ batched: (s) => errOut.push(s) });
+    pyodide.setStdin({ stdin: () => inputIndex < stdinLines.length ? stdinLines[inputIndex++] : undefined });
+    await pyodide.runPythonAsync(code);
+    return { stdout: out.join('\n'), stderr: errOut.join('\n'), error: '', timedOut: false };
+  } catch (err) {
+    return { stdout: out.join('\n'), stderr: errOut.join('\n'), error: String(err), timedOut: false };
+  }
+}
+
+async function executeLocalCase(code, stdinText, timeout = 6) {
+  if (!localServiceReady) return { stdout: '', stderr: '', error: '本地 Python 服务未连接', timedOut: false };
+  try {
+    const resp = await fetch('/api/python/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, stdin: stdinText || '', timeout })
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || !data.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+    if (data.timedOut) {
+      return { stdout: data.stdout || '', stderr: data.stderr || '', error: 'TimeoutError: 程序运行超过时间限制', timedOut: true };
+    }
+    const failed = Number(data.returncode || 0) !== 0;
+    return {
+      stdout: data.stdout || '',
+      stderr: data.stderr || '',
+      error: failed ? (data.stderr || `Python 进程退出码 ${data.returncode}`) : '',
+      timedOut: false
+    };
+  } catch (err) {
+    return { stdout: '', stderr: '', error: String(err), timedOut: false };
+  }
+}
+
+async function executeCase(code, stdinText, lesson, preferLocal = false) {
+  const useLocal = localServiceReady && (preferLocal || lesson.runtime === 'local');
+  return useLocal ? executeLocalCase(code, stdinText, lesson.boss ? 10 : 6) : executeBrowserCase(code, stdinText);
+}
+
+async function runHiddenTests(lesson, code) {
+  const tests = Array.isArray(lesson.hiddenTests) ? lesson.hiddenTests : [];
+  if (!tests.length) return { passed: true, total: 0 };
+  for (let i = 0; i < tests.length; i++) {
+    const test = tests[i];
+    const combined = test.appendCode ? `${code}\n\n# PyPath hidden test\n${test.appendCode}\n` : code;
+    const result = await executeCase(combined, test.stdin ?? lesson.stdin ?? '', lesson, true);
+    if (result.error || normalized(result.stdout) !== normalized(test.expected)) {
+      return { passed: false, total: tests.length, failedIndex: i, error: result.error || '' };
+    }
+  }
+  return { passed: true, total: tests.length };
+}
+
 async function runCode() {
-  if (!pyodide || running) return;
+  if ((!pyodide && !localServiceReady) || running) return;
   running = true;
   $('runBtn').disabled = true;
   const lesson = currentLesson();
   const code = getCode();
   const stdinText = $('stdinInput').value;
-  const stdinLines = stdinText === '' ? [] : stdinText.split(/\r?\n/);
-  const out = [];
-  const errOut = [];
-  let inputIndex = 0;
 
   state.attemptsByLesson[lesson.id] = (state.attemptsByLesson[lesson.id] || 0) + 1;
   $('attemptsText').textContent = `尝试 ${state.attemptsByLesson[lesson.id]} 次`;
   localStorage.setItem(`pypath-code-${lesson.id}`, code);
   localStorage.setItem(`pypath-stdin-${lesson.id}`, stdinText);
+  learningCache.codeByLesson[String(lesson.id)] = code;
+  learningCache.stdinByLesson[String(lesson.id)] = stdinText;
 
   try {
-    pyodide.setStdout({ batched: (s) => out.push(s) });
-    pyodide.setStderr({ batched: (s) => errOut.push(s) });
-    pyodide.setStdin({ stdin: () => inputIndex < stdinLines.length ? stdinLines[inputIndex++] : undefined });
+    const result = await executeCase(code, stdinText, lesson, false);
+    const displayOutput = [result.stdout, result.stderr].filter(Boolean).join('\n');
+    lastRunOutput = result.stdout || '';
+    lastRunError = result.error || '';
+    $('consoleOutput').textContent = displayOutput || result.error || '(程序没有输出任何内容)';
 
-    await pyodide.runPythonAsync(code);
-    const output = [...out, ...errOut].join('\n');
-    lastRunOutput = output;
-    lastRunError = '';
-    $('consoleOutput').textContent = output || '(程序没有输出任何内容)';
+    if (result.error) {
+      classifyError(result.error);
+      upsertReview(lesson, 'error', 24);
+      $('feedbackBox').className = 'feedback bad';
+      $('feedbackBox').textContent = friendlyError(result.error);
+      $('nextBtn').classList.add('hidden');
+      tutorSay(tutorForError(result.error));
+      return;
+    }
 
-    let passed = normalized(output) === normalized(lesson.expected);
+    let passed = normalized(result.stdout) === normalized(lesson.expected);
     if (lesson.codeMustInclude) passed = passed && lesson.codeMustInclude.every(token => code.includes(token));
 
+    if (passed && Array.isArray(lesson.hiddenTests) && lesson.hiddenTests.length) {
+      $('feedbackBox').className = 'feedback neutral';
+      $('feedbackBox').textContent = `基础用例通过，正在运行 ${lesson.hiddenTests.length} 个隐藏测试…`;
+      const hidden = await runHiddenTests(lesson, code);
+      if (!hidden.passed) {
+        state.hiddenFailures[lesson.id] = (state.hiddenFailures[lesson.id] || 0) + 1;
+        state.stats.wrongAnswers = (state.stats.wrongAnswers || 0) + 1;
+        upsertReview(lesson, 'hidden-test', 24);
+        $('feedbackBox').className = 'feedback warn';
+        $('feedbackBox').textContent = '基础用例通过了，但有一个隐藏测试没有通过。\n\n这通常说明代码只适用于当前示例。检查边界值、不同输入，或者有没有把答案写死。';
+        $('nextBtn').classList.add('hidden');
+        tutorSay('你的代码已经通过当前示例，但换一组输入就出现问题。先不要问隐藏输入是什么，检查代码是否真正根据输入和变量计算。');
+        return;
+      }
+    }
+
     if (passed) {
-      if (!state.solved.includes(state.current)) state.solved.push(state.current);
-      state.solved.sort((a, b) => a - b);
+      const wasSolved = state.solved.includes(state.current);
+      markLessonSolved(lesson);
       $('feedbackBox').className = 'feedback good';
       $('feedbackBox').textContent = lesson.boss
         ? '👑 BOSS CLEAR！本阶段已经通关，下一阶段已解锁。'
-        : '✅ 挑战成功。下面已经生成本题完整详解。';
+        : ((lesson.hiddenTests || []).length
+          ? `✅ 挑战成功，并通过 ${lesson.hiddenTests.length} 个隐藏测试。下面是完整详解。`
+          : '✅ 挑战成功。下面已经生成本题完整详解。');
       $('nextBtn').classList.toggle('hidden', state.current >= lessons.length - 1);
       $('nextBtn').textContent = lesson.boss ? '进入下一阶段 →' : '下一关 →';
       tutorSay(
@@ -736,31 +869,24 @@ async function runCode() {
         'good'
       );
       renderSolutionExplanation(lesson, code);
-      setTimeout(() => {
+      if (lesson.boss && !wasSolved) setTimeout(() => showStageSummary(lesson.stageId), 550);
+      else setTimeout(() => {
         const panel = $('solutionPanel');
         if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 120);
     } else {
       state.stats.wrongAnswers = (state.stats.wrongAnswers || 0) + 1;
+      upsertReview(lesson, 'wrong-answer', 24);
       $('feedbackBox').className = 'feedback warn';
       $('feedbackBox').textContent = `代码能运行，但结果还不对。\n目标输出：\n${lesson.expected}\n\n先比较你的输出和目标有什么不同。`;
       $('nextBtn').classList.add('hidden');
       tutorSay('代码已经能运行，这是好事。现在不要改语法，先只比较“你的输出”和“目标输出”哪里不一样。');
     }
-  } catch (err) {
-    const message = String(err);
-    lastRunError = message;
-    lastRunOutput = '';
-    classifyError(message);
-    $('consoleOutput').textContent = message;
-    $('feedbackBox').className = 'feedback bad';
-    $('feedbackBox').textContent = friendlyError(message);
-    $('nextBtn').classList.add('hidden');
-    tutorSay(tutorForError(message));
   } finally {
     saveState();
     renderStats();
     renderLessonList();
+    updateReviewBadge();
     running = false;
     $('runBtn').disabled = false;
   }
