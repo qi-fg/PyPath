@@ -295,6 +295,10 @@ async function initLocalService() {
     localServiceReady = !!data.ok;
     if (data.version) appVersion = data.version;
     if (data.ai) aiState = { ...aiState, ...data.ai };
+    if (data.startupUpdate && data.startupUpdate.state === 'error') {
+      const status = $('updateStatus');
+      if (status) status.textContent = '上次自动更新失败：' + (data.startupUpdate.message || '未知错误') + '。你可以点击“检查更新”后直接“立即更新”。';
+    }
   } catch (_) {
     localServiceReady = false;
   }
@@ -607,9 +611,12 @@ async function checkUpdates() {
     if (!manifestResp.ok) throw new Error('更新服务器无响应');
     const manifest = await manifestResp.json();
     if (compareVersions(manifest.version, appVersion) > 0) {
-      status.textContent = `发现新版本 V${manifest.version}。下次启动 PyPath 时会自动下载安装；也可以重新打开 PyPath 立即更新。学习记录不会被删除。`;
+      status.textContent = `发现新版本 V${manifest.version}。可以直接点击“立即更新”，无需关闭网页。`;
+      $('onlineUpdateBtn').classList.remove('hidden');
+      $('onlineUpdateBtn').dataset.version = manifest.version;
     } else {
       status.textContent = `当前已经是最新版本 V${appVersion}。`;
+      $('onlineUpdateBtn').classList.add('hidden');
     }
   } catch (err) {
     status.textContent = `检查失败：${err.message || err}`;
@@ -679,6 +686,41 @@ async function saveAiSettings() {
   } catch (err) {
     status.textContent = `保存失败：${err.message || err}`;
     status.className = 'mini-status bad';
+  }
+}
+
+async function installOnlineUpdate() {
+  const status = $('updateStatus');
+  const btn = $('onlineUpdateBtn');
+  if (!localServiceReady) {
+    status.textContent = '本地更新服务未连接，请先重新打开 PyPath。';
+    return;
+  }
+  btn.disabled = true;
+  $('checkUpdateBtn').disabled = true;
+  status.textContent = '正在从 GitHub 下载并校验更新，请不要关闭 PyPath…';
+  try {
+    const resp = await fetch('/api/update/online', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || !data.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+    if (!data.updated) {
+      status.textContent = `当前已经是最新版本 V${data.version || appVersion}。`;
+      btn.classList.add('hidden');
+      return;
+    }
+    status.textContent = `V${data.version} 已安装，正在重启 PyPath…`;
+    await fetch('/api/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const back = await waitForRestart();
+    if (!back) throw new Error('更新已安装，但自动重启超时。请重新双击桌面 PyPath。');
+    location.href = '/?updated=' + Date.now();
+  } catch (err) {
+    status.textContent = `在线更新失败：${err.message || err}`;
+    btn.disabled = false;
+    $('checkUpdateBtn').disabled = false;
   }
 }
 
@@ -834,6 +876,7 @@ $('nextBtn').addEventListener('click', () => {
 $('settingsBtn').addEventListener('click', openSettings);
 document.querySelectorAll('[data-close-modal]').forEach(el => el.addEventListener('click', closeSettings));
 $('checkUpdateBtn').addEventListener('click', checkUpdates);
+$('onlineUpdateBtn').addEventListener('click', installOnlineUpdate);
 $('installUpdateBtn').addEventListener('click', () => $('updateFile').click());
 $('updateFile').addEventListener('change', async (e) => {
   const file = e.target.files && e.target.files[0];
