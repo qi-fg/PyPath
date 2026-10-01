@@ -20,6 +20,8 @@ function freshState() {
     reviewQueue: [],
     stageResults: {},
     hiddenFailures: {},
+    reviewModeLessonId: 0,
+    reviewReturnIndex: null,
     clientUpdatedAt: 0
   };
 }
@@ -325,13 +327,16 @@ function renderCurrentLesson() {
   $('stdinWrap').classList.toggle('hidden', !needsInput);
 
   $('consoleOutput').textContent = pyodide ? '准备好了。点击“运行代码”。' : 'Python 正在初始化，请稍候…';
-  const solved = state.solved.includes(state.current);
-  $('feedbackBox').className = solved ? 'feedback good' : 'feedback neutral';
-  $('feedbackBox').textContent = solved
-    ? (lesson.boss ? '👑 BOSS CLEAR！这个阶段已经通关，下一阶段已解锁。' : '✅ 这一关已经通过。下面可以查看完整详解。')
-    : (lesson.boss ? '👑 BOSS 关：尽量先自己组合本阶段知识，再使用提示。' : '写完代码后点击“运行代码”。');
+  const reviewing = Number(state.reviewModeLessonId || 0) === lesson.id;
+  const solved = state.solved.includes(state.current) && !reviewing;
+  $('feedbackBox').className = solved ? 'feedback good' : (reviewing ? 'feedback neutral' : 'feedback neutral');
+  $('feedbackBox').textContent = reviewing
+    ? '🔁 复习模式：重新独立完成这一题。旧详解暂时隐藏。'
+    : (solved
+      ? (lesson.boss ? '👑 BOSS CLEAR！这个阶段已经通关，下一阶段已解锁。' : '✅ 这一关已经通过。下面可以查看完整详解。')
+      : (lesson.boss ? '👑 BOSS 关：尽量先自己组合本阶段知识，再使用提示。' : '写完代码后点击“运行代码”。'));
 
-  $('nextBtn').classList.toggle('hidden', !solved || state.current >= lessons.length - 1);
+  $('nextBtn').classList.toggle('hidden', reviewing || !solved || state.current >= lessons.length - 1);
   $('nextBtn').textContent = lesson.boss ? '进入下一阶段 →' : '下一关 →';
   if (solved) renderSolutionExplanation(lesson, code);
   else hideSolutionExplanation();
@@ -421,6 +426,112 @@ function hideSolutionExplanation() {
   if ($('solutionPanel')) $('solutionPanel').classList.add('hidden');
 }
 
+function closeStageSummary() {
+  const modal = $('stageSummaryModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function stageMastery(stageId) {
+  const entries = stageEntries(stageId);
+  if (!entries.length) return 0;
+  const scores = entries.map(({ lesson, idx }) => {
+    if (state.masteryByLesson[lesson.id] != null) return Number(state.masteryByLesson[lesson.id]);
+    return state.solved.includes(idx) ? 85 : 0;
+  });
+  return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+}
+
+function showStageSummary(stageId) {
+  const stage = (window.COURSE_STAGES || []).find(item => item.id === stageId);
+  const entries = stageEntries(stageId);
+  if (!stage || !entries.length || !$('stageSummaryModal')) return;
+
+  const mastery = stageMastery(stageId);
+  const firstTry = entries.filter(({ lesson, idx }) => state.solved.includes(idx) && Number(state.attemptsByLesson[lesson.id] || 0) === 1).length;
+  const hints = entries.reduce((sum, { lesson }) => sum + Number(state.hintLevelByLesson[lesson.id] || 0), 0);
+  const weak = entries
+    .map(({ lesson, idx }) => ({ lesson, idx, score: Number(state.masteryByLesson[lesson.id] ?? (state.solved.includes(idx) ? 85 : 0)) }))
+    .filter(item => item.score < 80)
+    .sort((a, b) => a.score - b.score);
+
+  $('stageSummaryTitle').textContent = `阶段 ${stageId} · ${stage.title} 通关`;
+  $('stageSummarySubtitle').textContent = stage.subtitle;
+  $('stageSummaryMastery').textContent = `${mastery}%`;
+  $('stageSummaryFirstTry').textContent = String(firstTry);
+  $('stageSummaryHints').textContent = String(hints);
+  $('stageSummaryReview').textContent = String(weak.length);
+
+  const skills = $('stageSummarySkills');
+  skills.innerHTML = '';
+  entries.slice(0, -1).forEach(({ lesson }) => {
+    const span = document.createElement('span');
+    span.textContent = lesson.title;
+    skills.appendChild(span);
+  });
+
+  const weakBox = $('stageSummaryWeak');
+  weakBox.innerHTML = '';
+  if (!weak.length) {
+    const p = document.createElement('p');
+    p.textContent = '这一阶段暂时没有明显薄弱项。系统仍会在几天后安排一次间隔复习。';
+    weakBox.appendChild(p);
+  } else {
+    weak.slice(0, 4).forEach(item => {
+      const row = document.createElement('div');
+      row.innerHTML = `<strong>${item.lesson.title}</strong><span>掌握度 ${item.score}%</span>`;
+      weakBox.appendChild(row);
+      upsertReview(item.lesson, 'stage-review', 24);
+    });
+  }
+
+  state.stageResults[stageId] = {
+    mastery,
+    firstTry,
+    hints,
+    weakCount: weak.length,
+    completedAt: Date.now()
+  };
+  saveState();
+
+  const nextBtn = $('stageSummaryNextBtn');
+  if (stageId >= (window.COURSE_STAGES || []).length) {
+    nextBtn.textContent = '完成主线';
+  } else {
+    nextBtn.textContent = `进入阶段 ${stageId + 1} →`;
+  }
+  nextBtn.dataset.stageId = String(stageId);
+  $('stageSummaryModal').classList.remove('hidden');
+}
+
+function startNextReview() {
+  const due = dueReviewItems();
+  if (!due.length) {
+    alert('今天没有到期复习。继续主线即可，系统会按你的错误和提示使用情况安排后续复习。');
+    return;
+  }
+  const item = due[0];
+  const idx = lessons.findIndex(lesson => lesson.id === item.lessonId);
+  if (idx < 0) return;
+  state.reviewReturnIndex = state.current;
+  state.reviewModeLessonId = item.lessonId;
+  state.current = idx;
+  state.openStageId = lessons[idx].stageId;
+  saveState();
+  renderAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  tutorSay('现在是复习模式：先不要看旧答案，重新独立完成。通过后会提高这一知识点的掌握度。', 'system');
+}
+
+function completeReview(lesson) {
+  state.reviewQueue = (state.reviewQueue || []).filter(item => item.lessonId !== lesson.id);
+  const old = Number(state.masteryByLesson[lesson.id] || 70);
+  const next = Math.min(100, Math.max(old, lessonMasteryScore(lesson)) + 8);
+  state.masteryByLesson[lesson.id] = next;
+  state.reviewModeLessonId = 0;
+  const intervalHours = next >= 90 ? 168 : 72;
+  upsertReview(lesson, 'spaced-review', intervalHours);
+}
+
 function renderStats() {
   const solved = state.solved.length;
   const stages = window.COURSE_STAGES || [];
@@ -440,6 +551,7 @@ function renderStats() {
   $('progressFill').style.width = `${pct}%`;
   $('progressPercent').textContent = `${pct}%`;
   $('courseProgressSmall').textContent = `${completedStages}/${stages.length} 阶段`;
+  updateReviewBadge();
 }
 
 function renderAll() {
@@ -602,6 +714,7 @@ function revealHint() {
   const next = current + 1;
   state.hintLevelByLesson[lesson.id] = next;
   state.stats.hintUses = (state.stats.hintUses || 0) + 1;
+  upsertReview(lesson, 'hint', 24);
   $('hintBox').classList.remove('hidden');
   $('hintBox').textContent = `提示 ${next}/3\n${lesson.hints[next - 1]}`;
   tutorSay(`第 ${next} 级提示：\n${lesson.hints[next - 1]}`);
@@ -853,15 +966,19 @@ async function runCode() {
 
     if (passed) {
       const wasSolved = state.solved.includes(state.current);
-      markLessonSolved(lesson);
+      const wasReviewing = Number(state.reviewModeLessonId || 0) === lesson.id;
+      if (wasReviewing) completeReview(lesson);
+      else markLessonSolved(lesson);
       $('feedbackBox').className = 'feedback good';
-      $('feedbackBox').textContent = lesson.boss
-        ? '👑 BOSS CLEAR！本阶段已经通关，下一阶段已解锁。'
-        : ((lesson.hiddenTests || []).length
-          ? `✅ 挑战成功，并通过 ${lesson.hiddenTests.length} 个隐藏测试。下面是完整详解。`
-          : '✅ 挑战成功。下面已经生成本题完整详解。');
+      $('feedbackBox').textContent = wasReviewing
+        ? '🔁 复习通过！这一知识点的掌握度已更新。'
+        : (lesson.boss
+          ? '👑 BOSS CLEAR！本阶段已经通关，下一阶段已解锁。'
+          : ((lesson.hiddenTests || []).length
+            ? `✅ 挑战成功，并通过 ${lesson.hiddenTests.length} 个隐藏测试。下面是完整详解。`
+            : '✅ 挑战成功。下面已经生成本题完整详解。'));
       $('nextBtn').classList.toggle('hidden', state.current >= lessons.length - 1);
-      $('nextBtn').textContent = lesson.boss ? '进入下一阶段 →' : '下一关 →';
+      $('nextBtn').textContent = wasReviewing ? '返回主线 →' : (lesson.boss ? '进入下一阶段 →' : '下一关 →');
       tutorSay(
         lesson.boss
           ? 'BOSS 已击败。先看完整复盘，确认自己知道每个部分为什么这样写，再进入下一阶段。'
@@ -869,7 +986,7 @@ async function runCode() {
         'good'
       );
       renderSolutionExplanation(lesson, code);
-      if (lesson.boss && !wasSolved) setTimeout(() => showStageSummary(lesson.stageId), 550);
+      if (lesson.boss && !wasSolved && !wasReviewing) setTimeout(() => showStageSummary(lesson.stageId), 550);
       else setTimeout(() => {
         const panel = $('solutionPanel');
         if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1289,6 +1406,17 @@ $('tutorInput').addEventListener('keydown', (e) => {
   }
 });
 $('nextBtn').addEventListener('click', () => {
+  if (state.reviewReturnIndex !== null && state.reviewReturnIndex !== undefined) {
+    const back = Math.max(0, Math.min(Number(state.reviewReturnIndex) || 0, lessons.length - 1));
+    state.reviewReturnIndex = null;
+    state.reviewModeLessonId = 0;
+    state.current = back;
+    state.openStageId = lessons[back]?.stageId || state.openStageId;
+    saveState();
+    renderAll();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
   if (state.current < lessons.length - 1 && state.solved.includes(state.current)) {
     state.current += 1;
     state.openStageId = currentLesson()?.stageId || state.openStageId;
