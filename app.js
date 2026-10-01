@@ -149,6 +149,25 @@ function currentLesson() {
   return lessons[state.current];
 }
 
+function updateRuntimeIndicator() {
+  const lesson = currentLesson();
+  const el = $('runtimeStatus');
+  if (!lesson || !el) return;
+  if (lesson.runtime === 'local' && localServiceReady) {
+    el.textContent = '本地 Python 已就绪';
+    el.classList.add('ready');
+    $('runBtn').disabled = false;
+  } else if (pyodide) {
+    el.textContent = lesson.runtime === 'local' ? '浏览器 Python 备用模式' : '浏览器 Python 已就绪';
+    el.classList.add('ready');
+    $('runBtn').disabled = false;
+  } else if (localServiceReady) {
+    el.textContent = '本地 Python 备用模式';
+    el.classList.add('ready');
+    $('runBtn').disabled = false;
+  }
+}
+
 function saveCurrentCode() {
   const lesson = currentLesson();
   if (!lesson || suppressEditorSave) return;
@@ -325,6 +344,7 @@ function renderCurrentLesson() {
 
   const needsInput = lesson.stdin !== '' || /\binput\s*\(/.test(lesson.starter);
   $('stdinWrap').classList.toggle('hidden', !needsInput);
+  updateRuntimeIndicator();
 
   $('consoleOutput').textContent = pyodide ? '准备好了。点击“运行代码”。' : 'Python 正在初始化，请稍候…';
   const reviewing = Number(state.reviewModeLessonId || 0) === lesson.id;
@@ -410,6 +430,9 @@ function renderSolutionExplanation(lesson, code = getCode()) {
   });
 
   $('solutionTakeaway').textContent = lesson.takeaway || lesson.simpleExplain || plainConcept(lesson) || '能独立重新写出这题，比记住答案更重要。';
+  const mastery = Number(state.masteryByLesson?.[lesson.id] || lessonMasteryScore(lesson));
+  const done = panel.querySelector('.solution-done');
+  if (done) done.textContent = `掌握度 ${mastery}%`;
 
   const boss = $('bossReview');
   if (lesson.boss) {
@@ -696,6 +719,7 @@ async function initLocalService() {
     localServiceReady = false;
   }
   setTutorMode();
+  updateRuntimeIndicator();
   if (localServiceReady) await syncLearningDataFromServer();
 }
 
@@ -725,15 +749,23 @@ function revealHint() {
 async function initPython() {
   try {
     pyodide = await loadPyodide();
-    $('runtimeStatus').textContent = 'Python 已就绪';
-    $('runtimeStatus').classList.add('ready');
-    $('runBtn').disabled = false;
-    $('consoleOutput').textContent = 'Python 已就绪。点击“运行代码”。';
+    updateRuntimeIndicator();
+    $('consoleOutput').textContent = currentLesson()?.runtime === 'local' && localServiceReady
+      ? '本地 Python 已就绪。点击“运行代码”。'
+      : 'Python 已就绪。点击“运行代码”。';
   } catch (err) {
-    $('runtimeStatus').textContent = 'Python 加载失败';
-    $('runtimeStatus').classList.add('failed');
-    $('consoleOutput').textContent = '无法加载浏览器 Python 运行环境。\n请检查网络后刷新页面。\n\n' + err;
-    tutorSay('Python 运行环境没有加载成功。先检查网络，然后刷新页面。');
+    if (localServiceReady) {
+      $('runtimeStatus').textContent = '本地 Python 已就绪';
+      $('runtimeStatus').classList.add('ready');
+      $('runBtn').disabled = false;
+      $('consoleOutput').textContent = '浏览器 Python 加载失败，已自动切换到本地 Python。';
+      tutorSay('浏览器 Python 没有加载成功，但本地 Python 可以继续运行练习。', 'system');
+    } else {
+      $('runtimeStatus').textContent = 'Python 加载失败';
+      $('runtimeStatus').classList.add('failed');
+      $('consoleOutput').textContent = '无法加载 Python 运行环境。\n请检查网络后刷新页面。\n\n' + err;
+      tutorSay('Python 运行环境没有加载成功。先检查网络，然后刷新页面。');
+    }
   }
 }
 
