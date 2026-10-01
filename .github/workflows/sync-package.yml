@@ -2,9 +2,10 @@ name: Publish PyPath package
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - "release-trigger.json"
+      - release-trigger.json
 
 permissions:
   contents: write
@@ -13,7 +14,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -21,28 +23,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(python - <<'PY'
-import json
-print(json.load(open('release-trigger.json', encoding='utf-8'))['version'])
-PY
-)"
-          EXPECTED_SHA="$(python - <<'PY'
-import json
-print(json.load(open('release-trigger.json', encoding='utf-8'))['sha256'])
-PY
-)"
-          NOTES="$(python - <<'PY'
-import json
-print(json.load(open('release-trigger.json', encoding='utf-8')).get('notes','PyPath update'))
-PY
-)"
+          VERSION="$(python -c "import json; print(json.load(open('release-trigger.json', encoding='utf-8'))['version'])")"
+          EXPECTED_SHA="$(python -c "import json; print(json.load(open('release-trigger.json', encoding='utf-8'))['sha256'])")"
+          NOTES="$(python -c "import json; print(json.load(open('release-trigger.json', encoding='utf-8')).get('notes','PyPath update'))")"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "EXPECTED_SHA=$EXPECTED_SHA" >> "$GITHUB_ENV"
-          {
-            echo "RELEASE_NOTES<<EOF"
-            echo "$NOTES"
-            echo "EOF"
-          } >> "$GITHUB_ENV"
+          echo "RELEASE_NOTES=$NOTES" >> "$GITHUB_ENV"
 
           mkdir -p /tmp/pypath-release
           cat .release-parts/PyPath-V"$VERSION".part*.b64 | tr -d '\r\n' | base64 -d > /tmp/pypath-release/PyPath-V"$VERSION".zip
@@ -63,21 +49,8 @@ PY
       - name: Prepare online update manifest
         shell: bash
         run: |
-          python - <<'PY'
-import json, os
-version = os.environ["VERSION"]
-sha = os.environ["EXPECTED_SHA"]
-notes = os.environ["RELEASE_NOTES"]
-manifest = {
-    "version": version,
-    "downloadUrl": f"https://github.com/qi-fg/PyPath/releases/download/v{version}/PyPath-V{version}.zip",
-    "sha256": sha,
-    "notes": notes
-}
-with open("update-manifest.json", "w", encoding="utf-8") as f:
-    json.dump(manifest, f, ensure_ascii=False, indent=2)
-    f.write("\n")
-PY
+          python -c "import json,os; v=os.environ['VERSION']; s=os.environ['EXPECTED_SHA']; n=os.environ['RELEASE_NOTES']; json.dump({'version':v,'downloadUrl':f'https://github.com/qi-fg/PyPath/releases/download/v{v}/PyPath-V{v}.zip','sha256':s,'notes':n}, open('update-manifest.json','w',encoding='utf-8'), ensure_ascii=False, indent=2)"
+          printf '\n' >> update-manifest.json
           rm -f releases/PyPath-V"$VERSION".zip || true
 
       - name: Commit source and manifest
