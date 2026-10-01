@@ -113,7 +113,7 @@ addEngineeringStage(15, [
     "task": "实现 get_user(fetcher,user_id)：调用 fetcher(user_id)；200 返回 name，404 返回 None，其他状态 raise RuntimeError。用提供的 fake_fetch 测试1和2，输出 Ada、missing。",
     "concept": "依赖注入、状态码分支与可测试 API 客户端综合",
     "starter": "def fake_fetch(user_id):\n    if user_id == 1:\n        return {'status': 200, 'json': {'name': 'Ada'}}\n    return {'status': 404, 'json': {'error': 'not found'}}\n\ndef get_user(fetcher, user_id):\n    pass\n\nprint(get_user(fake_fetch, 1))\nprint(get_user(fake_fetch, 2) or 'missing')\n",
-    "solution": "def get_user(fetcher, user_id):\n    response = fetcher(user_id)\n    if response['status'] == 200:\n        return response['json']['name']\n    if response['status'] == 404:\n        return None\n    raise RuntimeError('request failed')\n\nprint(get_user(fake_fetch, 1))\nprint(get_user(fake_fetch, 2) or 'missing')",
+    "solution": "def fake_fetch(user_id):\n    if user_id == 1:\n        return {'status': 200, 'json': {'name': 'Ada'}}\n    return {'status': 404, 'json': {'error': 'not found'}}\n\ndef get_user(fetcher, user_id):\n    response = fetcher(user_id)\n    if response['status'] == 200:\n        return response['json']['name']\n    if response['status'] == 404:\n        return None\n    raise RuntimeError('request failed')\n\nprint(get_user(fake_fetch, 1))\nprint(get_user(fake_fetch, 2) or 'missing')",
     "expected": "Ada\nmissing",
     "must": [
       "def",
