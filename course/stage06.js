@@ -108,7 +108,7 @@ addEngineeringStage(6, [
     "task": "base={'host':'localhost','port':8000}，override={'port':9000}。使用 update 合并后输出 9000。",
     "concept": "dict.update() 覆盖同名键",
     "starter": "base = {'host': 'localhost', 'port': 8000}\noverride = {'port': 9000}\n# 合并配置\n\nprint(base['port'])\n",
-    "solution": "base.update(override)\nprint(base['port'])",
+    "solution": "base = {'host': 'localhost', 'port': 8000}\noverride = {'port': 9000}\nbase.update(override)\nprint(base['port'])",
     "expected": "9000",
     "must": [
       "update"
@@ -133,7 +133,7 @@ addEngineeringStage(6, [
     "task": "给定 users 三个字典。统计 active=True 的人数，并按 role 统计数量。输出 active=2、admin=1、editor=2。",
     "concept": "字典列表、条件、频率统计与安全读取综合",
     "starter": "users = [\n    {'name': 'A', 'role': 'admin', 'active': True},\n    {'name': 'B', 'role': 'editor', 'active': False},\n    {'name': 'C', 'role': 'editor', 'active': True}\n]\nactive = 0\nroles = {}\n# 完成统计\n\nprint(f'active={active}')\nprint(f\"admin={roles.get('admin', 0)}\")\nprint(f\"editor={roles.get('editor', 0)}\")\n",
-    "solution": "active = 0\nroles = {}\nfor user in users:\n    if user['active']:\n        active += 1\n    role = user['role']\n    roles[role] = roles.get(role, 0) + 1\nprint(f'active={active}')\nprint(f\"admin={roles.get('admin', 0)}\")\nprint(f\"editor={roles.get('editor', 0)}\")",
+    "solution": "users = [\n    {'name': 'A', 'role': 'admin', 'active': True},\n    {'name': 'B', 'role': 'editor', 'active': False},\n    {'name': 'C', 'role': 'editor', 'active': True}\n]\nactive = 0\nroles = {}\nfor user in users:\n    if user['active']:\n        active += 1\n    role = user['role']\n    roles[role] = roles.get(role, 0) + 1\nprint(f'active={active}')\nprint(f\"admin={roles.get('admin', 0)}\")\nprint(f\"editor={roles.get('editor', 0)}\")",
     "expected": "active=2\nadmin=1\neditor=2",
     "must": [
       "for",
