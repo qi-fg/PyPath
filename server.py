@@ -21,6 +21,9 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "user-data"
 AI_CONFIG_PATH = DATA_DIR / "ai-config.json"
+LEARNING_DATA_PATH = DATA_DIR / "learning-data.json"
+LEARNING_BACKUP_PATH = DATA_DIR / "learning-data.backup.json"
+WORKSPACE_DIR = DATA_DIR / "workspace"
 VERSION_PATH = ROOT / "version.json"
 MAX_BODY = 100 * 1024 * 1024
 SERVER = None
@@ -50,6 +53,72 @@ def write_json(path: Path, data) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp.replace(path)
+
+
+def load_learning_data():
+    data = read_json(LEARNING_DATA_PATH, None)
+    return data if isinstance(data, dict) else None
+
+
+def save_learning_data(data: dict) -> dict:
+    if not isinstance(data, dict):
+        raise ValueError("学习数据格式无效")
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
+    if LEARNING_DATA_PATH.exists():
+        try:
+            shutil.copy2(LEARNING_DATA_PATH, LEARNING_BACKUP_PATH)
+        except Exception:
+            pass
+    payload = dict(data)
+    payload["savedAt"] = int(time.time() * 1000)
+    write_json(LEARNING_DATA_PATH, payload)
+    return payload
+
+
+def run_local_python(code: str, stdin_text: str = "", timeout_seconds: float = 6.0) -> dict:
+    code = str(code or "")
+    stdin_text = str(stdin_text or "")
+    if len(code.encode("utf-8")) > 512 * 1024:
+        raise ValueError("代码过长")
+    timeout_seconds = max(1.0, min(float(timeout_seconds or 6.0), 10.0))
+    WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
+
+    with tempfile.TemporaryDirectory(prefix="run-", dir=str(WORKSPACE_DIR)) as temp_dir:
+        script = Path(temp_dir) / "main.py"
+        script.write_text(code, encoding="utf-8")
+        try:
+            proc = subprocess.run(
+                [sys.executable, "-I", "-X", "utf8", str(script)],
+                input=stdin_text,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                capture_output=True,
+                cwd=temp_dir,
+                timeout=timeout_seconds,
+            )
+            stdout = (proc.stdout or "")[:200000]
+            stderr = (proc.stderr or "")[:200000]
+            return {
+                "stdout": stdout,
+                "stderr": stderr,
+                "returncode": proc.returncode,
+                "timedOut": False,
+            }
+        except subprocess.TimeoutExpired as exc:
+            stdout = (exc.stdout or "")
+            stderr = (exc.stderr or "")
+            if isinstance(stdout, bytes):
+                stdout = stdout.decode("utf-8", errors="replace")
+            if isinstance(stderr, bytes):
+                stderr = stderr.decode("utf-8", errors="replace")
+            return {
+                "stdout": str(stdout)[:200000],
+                "stderr": str(stderr)[:200000],
+                "returncode": -1,
+                "timedOut": True,
+            }
 
 
 def current_version() -> str:
@@ -416,6 +485,14 @@ class Handler(SimpleHTTPRequestHandler):
                 "hasKey": bool(cfg.get("apiKey")),
             })
             return
+        if path == "/api/learning-data":
+            data = load_learning_data()
+            self._send_json({
+                "ok": True,
+                "exists": data is not None,
+                "data": data,
+            })
+            return
         parts = [p for p in path.split("/") if p]
         if parts and (parts[0].startswith(".") or parts[0] == "user-data"):
             self.send_error(HTTPStatus.NOT_FOUND)
@@ -446,6 +523,23 @@ class Handler(SimpleHTTPRequestHandler):
                         next_cfg["apiKey"] = ""
                 write_json(AI_CONFIG_PATH, next_cfg)
                 self._send_json({"ok": True, "hasKey": bool(next_cfg["apiKey"])})
+                return
+
+            if path == "/api/learning-data":
+                data = self._read_json()
+                payload = data.get("data")
+                saved = save_learning_data(payload)
+                self._send_json({"ok": True, "savedAt": saved.get("savedAt")})
+                return
+
+            if path == "/api/python/run":
+                data = self._read_json()
+                result = run_local_python(
+                    data.get("code", ""),
+                    data.get("stdin", ""),
+                    data.get("timeout", 6),
+                )
+                self._send_json({"ok": True, **result})
                 return
 
             if path == "/api/ai/chat":
