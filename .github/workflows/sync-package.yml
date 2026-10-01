@@ -19,37 +19,39 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Read version
+      - name: Read versions
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(python -c "import json; print(json.load(open('version.json', encoding='utf-8'))['version'])")"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          UPDATE_VERSION="$(python -c "import json; d=json.load(open('version.json', encoding='utf-8')); print(d['version'])")"
+          RELEASE_VERSION="$(python -c "import json; d=json.load(open('version.json', encoding='utf-8')); print(d.get('displayVersion') or d['version'])")"
+          echo "UPDATE_VERSION=$UPDATE_VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=$RELEASE_VERSION" >> "$GITHUB_ENV"
 
       - name: Build update package
         shell: bash
         run: |
           set -euo pipefail
-          STAGE="/tmp/PyPath-V$VERSION"
-          ZIP="/tmp/PyPath-V$VERSION.zip"
+          STAGE="/tmp/PyPath-V$RELEASE_VERSION"
+          ZIP="/tmp/PyPath-V$RELEASE_VERSION.zip"
           rm -rf "$STAGE" "$ZIP"
           mkdir -p "$STAGE"
           rsync -a ./ "$STAGE/"             --exclude ".git/"             --exclude ".github/"             --exclude ".release-parts/"             --exclude "release-trigger.json"             --exclude "update-manifest.json"             --exclude "user-data/"             --exclude "*.log"             --exclude "__pycache__/"             --exclude "*.pyc"
           cd /tmp
-          zip -qr "PyPath-V$VERSION.zip" "PyPath-V$VERSION"
+          zip -qr "PyPath-V$RELEASE_VERSION.zip" "PyPath-V$RELEASE_VERSION"
           SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
           echo "PACKAGE_SHA=$SHA" >> "$GITHUB_ENV"
 
       - name: Update online manifest
         shell: bash
         run: |
-          python -c "import json,os; v=os.environ['VERSION']; s=os.environ['PACKAGE_SHA']; json.dump({'version':v,'downloadUrl':f'https://github.com/qi-fg/PyPath/releases/download/v{v}/PyPath-V{v}.zip','sha256':s,'notes':f'PyPath V{v}'}, open('update-manifest.json','w',encoding='utf-8'), ensure_ascii=False, indent=2)"
+          python -c "import json,os; u=os.environ['UPDATE_VERSION']; v=os.environ['RELEASE_VERSION']; s=os.environ['PACKAGE_SHA']; json.dump({'version':u,'displayVersion':v,'downloadUrl':f'https://github.com/qi-fg/PyPath/releases/download/v{v}/PyPath-V{v}.zip','sha256':s,'notes':f'PyPath V{v}'}, open('update-manifest.json','w',encoding='utf-8'), ensure_ascii=False, indent=2)"
           printf '\n' >> update-manifest.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add update-manifest.json
           if ! git diff --cached --quiet; then
-            git commit -m "Update manifest for PyPath V$VERSION"
+            git commit -m "Update manifest for PyPath V$RELEASE_VERSION"
             git push
           fi
 
@@ -59,9 +61,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ZIP="/tmp/PyPath-V$VERSION.zip"
+          ZIP="/tmp/PyPath-V$RELEASE_VERSION.zip"
           if gh release view "v$VERSION" >/dev/null 2>&1; then
             gh release upload "v$VERSION" "$ZIP" --clobber
           else
-            gh release create "v$VERSION" "$ZIP" --title "PyPath V$VERSION" --notes "PyPath V$VERSION"
+            gh release create "v$VERSION" "$ZIP" --title "PyPath V$RELEASE_VERSION" --notes "PyPath V$RELEASE_VERSION"
           fi
