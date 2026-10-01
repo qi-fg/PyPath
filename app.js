@@ -895,7 +895,7 @@ async function executeLocalCase(code, stdinText, timeout = 6) {
 }
 
 async function executeCase(code, stdinText, lesson, preferLocal = false) {
-  const useLocal = localServiceReady && (preferLocal || lesson.runtime === 'local');
+  const useLocal = localServiceReady && (preferLocal || lesson.runtime === 'local' || !pyodide);
   return useLocal ? executeLocalCase(code, stdinText, lesson.boss ? 10 : 6) : executeBrowserCase(code, stdinText);
 }
 
@@ -1326,7 +1326,12 @@ function importLearningData(file) {
       Object.entries(data.items).forEach(([key, value]) => {
         if (key.startsWith('pypath-')) localStorage.setItem(key, value);
       });
-      alert('学习数据已导入。页面将重新加载。');
+      try {
+        const importedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        importedState.clientUpdatedAt = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(importedState));
+      } catch (_) {}
+      alert('学习数据已导入。页面将重新加载，并同步到 PyPath 本地学习数据文件。');
       location.reload();
     } catch (err) {
       alert(`导入失败：${err.message || err}`);
@@ -1335,14 +1340,34 @@ function importLearningData(file) {
   reader.readAsText(file, 'utf-8');
 }
 
-function resetLearningData() {
-  if (!confirm('确定要清除 PyPath 的全部本地学习记录吗？这个操作不能撤销。')) return;
+async function resetLearningData() {
+  if (!confirm('确定要清除 PyPath 的全部学习记录吗？这个操作不能撤销。')) return;
   const keys = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key && key.startsWith('pypath-')) keys.push(key);
   }
   keys.forEach(k => localStorage.removeItem(k));
+
+  if (localServiceReady) {
+    try {
+      const emptyState = freshState();
+      emptyState.clientUpdatedAt = Date.now();
+      await fetch('/api/learning-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: {
+            schema: 1,
+            clientUpdatedAt: emptyState.clientUpdatedAt,
+            state: emptyState,
+            codeByLesson: {},
+            stdinByLesson: {}
+          }
+        })
+      });
+    } catch (_) {}
+  }
   location.reload();
 }
 
@@ -1426,6 +1451,27 @@ $('nextBtn').addEventListener('click', () => {
   }
 });
 
+$('reviewBtn').addEventListener('click', startNextReview);
+$('stageSummaryCloseBtn').addEventListener('click', () => {
+  closeStageSummary();
+  const panel = $('solutionPanel');
+  if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+$('stageSummaryNextBtn').addEventListener('click', () => {
+  const stageId = Number($('stageSummaryNextBtn').dataset.stageId || 0);
+  closeStageSummary();
+  if (stageId > 0 && stageId < (window.COURSE_STAGES || []).length) {
+    const nextIndex = lessons.findIndex(lesson => lesson.stageId === stageId + 1);
+    if (nextIndex >= 0) {
+      state.current = nextIndex;
+      state.openStageId = stageId + 1;
+      saveState();
+      renderAll();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+});
+document.querySelectorAll('[data-close-stage-summary]').forEach(el => el.addEventListener('click', closeStageSummary));
 $('settingsBtn').addEventListener('click', openSettings);
 document.querySelectorAll('[data-close-modal]').forEach(el => el.addEventListener('click', closeSettings));
 $('checkUpdateBtn').addEventListener('click', checkUpdates);
@@ -1446,7 +1492,9 @@ $('importFile').addEventListener('change', (e) => {
 });
 $('resetProgressBtn').addEventListener('click', resetLearningData);
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !$('settingsModal').classList.contains('hidden')) closeSettings();
+  if (e.key !== 'Escape') return;
+  if (!$('settingsModal').classList.contains('hidden')) closeSettings();
+  if (!$('stageSummaryModal').classList.contains('hidden')) closeStageSummary();
 });
 
 updateStreak();
