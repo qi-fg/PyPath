@@ -66,6 +66,8 @@
         starter: r.starter || '',
         stdin: r.stdin || '',
         expected: String(r.expected ?? ''),
+        runtime: r.runtime || (stageId >= 9 ? 'local' : 'browser'),
+        hiddenTests: Array.isArray(r.hiddenTests) ? r.hiddenTests : [],
         codeMustInclude: r.must || [],
         prediction: r.prediction || null,
         simpleExplain: r.why || conceptText,
