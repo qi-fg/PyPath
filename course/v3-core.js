@@ -74,7 +74,9 @@
         solution,
         detailConcept: conceptText,
         detailWhy: r.why || conceptText,
-        walkthrough: r.walk || ('参考实现围绕“' + conceptText + '”完成任务。通过后再逐行对照你的写法与参考实现。'),
+        walkthrough: r.walk || (solution
+          ? ('参考实现按下面顺序执行：\n' + solution.split('\n').filter(Boolean).map((line, i) => (i + 1) + '. ' + line).join('\n') + '\n\n逐行对照你的通过代码，确认每一步的数据变化。')
+          : ('参考实现围绕“' + conceptText + '”完成任务。通过后再逐行对照你的写法与参考实现。')),
         pitfalls: r.pitfalls || [
           '只记住最终答案，没有说清楚变量和表达式在每一步发生了什么。',
           '一次修改太多地方，出错时难以定位真正原因。'
