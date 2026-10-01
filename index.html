@@ -20,6 +20,7 @@
       <span id="levelBadge">Lv.1</span>
       <span>🔥 <b id="streak">1</b> 天</span>
       <span>✅ <b id="solvedCount">0</b>/<b id="totalCount">0</b></span>
+      <button id="reviewBtn" class="review-top-btn" title="今日复习">复习 <b id="reviewCount">0</b></button>
       <button id="settingsBtn" class="icon-btn" title="设置">⚙</button>
     </div>
   </header>
@@ -277,8 +278,8 @@
 
           <div class="settings-card">
             <div class="settings-card-main">
-              <strong>备份与恢复</strong>
-              <span>包含关卡进度、练习代码和错误统计。</span>
+              <strong>学习数据保护</strong>
+              <span id="learningStorageStatus">正在检查本地学习数据文件…</span>
             </div>
             <div class="inline-actions">
               <button id="exportDataBtn" class="btn soft">导出数据</button>
@@ -295,6 +296,40 @@
             <button id="resetProgressBtn" class="btn danger-soft">重置</button>
           </div>
         </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="stageSummaryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="stageSummaryTitle">
+    <div class="modal-backdrop" data-close-stage-summary></div>
+    <div class="modal-card stage-summary-card">
+      <div class="stage-summary-hero">
+        <div class="stage-summary-crown">👑</div>
+        <div>
+          <span id="stageSummaryKicker">BOSS CLEAR</span>
+          <h2 id="stageSummaryTitle">阶段通关</h2>
+          <p id="stageSummarySubtitle"></p>
+        </div>
+      </div>
+      <div class="stage-summary-stats">
+        <div><b id="stageSummaryMastery">0</b><span>阶段掌握度</span></div>
+        <div><b id="stageSummaryFirstTry">0</b><span>一次通过</span></div>
+        <div><b id="stageSummaryHints">0</b><span>提示使用</span></div>
+        <div><b id="stageSummaryReview">0</b><span>待复习知识</span></div>
+      </div>
+      <div class="stage-summary-body">
+        <section>
+          <h3>这一阶段你已经完成</h3>
+          <div id="stageSummarySkills" class="stage-summary-skills"></div>
+        </section>
+        <section>
+          <h3>建议重点复习</h3>
+          <div id="stageSummaryWeak" class="stage-summary-weak"></div>
+        </section>
+      </div>
+      <div class="stage-summary-actions">
+        <button id="stageSummaryCloseBtn" class="btn soft">先看详解</button>
+        <button id="stageSummaryNextBtn" class="btn primary">进入下一阶段 →</button>
       </div>
     </div>
   </div>
