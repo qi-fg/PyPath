@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>PyPath · Python 训练场</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">Py</div>
+      <div>
+        <strong>PyPath</strong>
+        <span>Python 训练场</span>
+      </div>
+    </div>
+    <div class="top-stats">
+      <span id="levelBadge">Lv.1</span>
+      <span>🔥 <b id="streak">1</b> 天</span>
+      <span>✅ <b id="solvedCount">0</b>/<b id="totalCount">0</b></span>
+      <button id="settingsBtn" class="icon-btn" title="设置">⚙</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="sidebar panel">
+      <div class="side-title-row">
+        <div class="side-title">学习路线</div>
+        <span id="courseProgressSmall">0%</span>
+      </div>
+      <div id="lessonList" class="lesson-list"></div>
+      <div class="mistake-card">
+        <h3>错误档案</h3>
+        <div class="mistake-grid">
+          <div><b id="syntaxErrors">0</b><span>语法错误</span></div>
+          <div><b id="runtimeErrors">0</b><span>运行错误</span></div>
+          <div><b id="wrongAnswers">0</b><span>结果错误</span></div>
+          <div><b id="hintUses">0</b><span>提示次数</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <section class="lesson-panel panel">
+        <div class="lesson-meta">
+          <span id="lessonStage" class="pill">基础</span>
+          <span id="lessonProgressText">第 1 关</span>
+        </div>
+        <h1 id="lessonTitle">输出你的第一行 Python</h1>
+        <p id="lessonIntro" class="intro"></p>
+
+        <div class="task-box">
+          <div class="task-label">本关任务</div>
+          <div id="lessonTask" class="task-text"></div>
+        </div>
+
+        <div id="conceptBox" class="concept-box"></div>
+
+        <div id="predictionCard" class="prediction-card hidden">
+          <div class="prediction-title">运行前先猜一下</div>
+          <div id="predictionQuestion" class="prediction-question"></div>
+          <div id="predictionOptions" class="prediction-options"></div>
+          <div id="predictionFeedback" class="prediction-feedback"></div>
+        </div>
+
+        <div class="lesson-actions">
+          <button id="dontUnderstandBtn" class="btn soft">🙋 我看不懂</button>
+          <button id="hintBtn" class="btn secondary">💡 给一点提示</button>
+        </div>
+        <div id="hintBox" class="hint-box hidden"></div>
+      </section>
+
+      <section class="coding-column">
+        <section class="editor-panel panel">
+          <div class="editor-toolbar">
+            <div class="editor-file">
+              <strong>main.py</strong>
+              <span id="runtimeStatus" class="runtime-status">正在加载 Python…</span>
+            </div>
+            <div class="toolbar-actions">
+              <button id="resetBtn" class="btn ghost">重置</button>
+              <button id="runBtn" class="btn primary" disabled>▶ 运行代码</button>
+            </div>
+          </div>
+          <div id="monacoEditor" class="monaco-host hidden"></div>
+          <textarea id="codeEditor" class="fallback-editor" spellcheck="false" aria-label="Python 代码编辑器"></textarea>
+          <div id="stdinWrap" class="stdin-wrap hidden">
+            <label for="stdinInput">程序输入 <span>（每行代表一次 input()）</span></label>
+            <textarea id="stdinInput" spellcheck="false" placeholder="在这里填写程序输入"></textarea>
+          </div>
+        </section>
+
+        <section class="output-panel panel">
+          <div class="result-head">
+            <strong>运行结果</strong>
+            <span id="attemptsText">尝试 0 次</span>
+          </div>
+          <pre id="consoleOutput" class="console">Python 正在初始化，请稍候…</pre>
+          <div id="feedbackBox" class="feedback neutral">写完代码后点击“运行代码”。</div>
+          <button id="nextBtn" class="btn success next-btn hidden">下一关 →</button>
+        </section>
+      </section>
+
+      <aside class="tutor-panel panel">
+        <div class="tutor-head">
+          <div>
+            <strong>学习导师</strong>
+            <span id="tutorModeText">本地智能模式</span>
+          </div>
+          <span id="tutorModeBadge" class="tutor-mode-badge local">LOCAL</span>
+        </div>
+        <div id="tutorMessages" class="tutor-messages"></div>
+        <div class="tutor-composer">
+          <textarea id="tutorInput" rows="2" placeholder="可以问：这行是什么意思？为什么报错？下一步该改哪里？"></textarea>
+          <button id="sendTutorBtn" class="btn primary">发送</button>
+        </div>
+        <div class="tutor-actions">
+          <button id="explainCodeBtn" class="btn tutor-action">解释当前代码</button>
+          <button id="tutorHintBtn" class="btn tutor-action">再给一点提示</button>
+          <button id="clearTutorBtn" class="btn tutor-action subtle">清空对话</button>
+        </div>
+        <div id="tutorNote" class="tutor-note">默认使用本地智能导师；在设置中配置兼容接口后，可切换为真正的 AI 导师。</div>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="footer-progress">
+    <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+    <div><span id="progressPercent">0%</span> · 重点是亲手写、亲手改、亲手跑通</div>
+  </footer>
+
+  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="settingsTitle">PyPath 设置</h2>
+          <p>学习数据和版本管理</p>
+        </div>
+        <button class="modal-close" data-close-modal>×</button>
+      </div>
+
+      <div class="setting-section">
+        <div class="section-title">版本与更新</div>
+        <div class="setting-row">
+          <div>
+            <strong>当前版本</strong>
+            <span id="versionText">正在读取…</span>
+          </div>
+          <button id="checkUpdateBtn" class="btn soft">检查在线更新</button>
+        </div>
+        <div id="updateStatus" class="setting-note">在线更新地址尚未绑定时，也可以直接安装我给你的 ZIP 更新包。</div>
+        <div class="setting-row compact-row">
+          <div>
+            <strong>内部安装更新包</strong>
+            <span>以后拿到新版 ZIP，不需要解压覆盖，直接在这里安装</span>
+          </div>
+          <div class="inline-actions">
+            <button id="installUpdateBtn" class="btn primary">选择更新包</button>
+            <input id="updateFile" type="file" accept=".zip,application/zip" class="hidden" />
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <div class="section-title">AI 导师</div>
+        <div class="ai-setting-grid">
+          <label class="toggle-row">
+            <input id="aiEnabled" type="checkbox" />
+            <span><strong>启用 AI 导师</strong><small>未启用时继续使用免费的本地智能导师</small></span>
+          </label>
+          <label>
+            <span>接口地址</span>
+            <input id="aiEndpoint" class="setting-input" type="url" placeholder="例如：https://.../v1 或完整 chat/completions 地址" />
+          </label>
+          <label>
+            <span>模型名称</span>
+            <input id="aiModel" class="setting-input" type="text" placeholder="填写你账号可用的模型名" />
+          </label>
+          <label>
+            <span>API Key</span>
+            <input id="aiApiKey" class="setting-input" type="password" autocomplete="off" placeholder="留空表示保留已保存的 Key" />
+          </label>
+          <div class="ai-actions">
+            <button id="saveAiBtn" class="btn primary">保存 AI 设置</button>
+            <span id="aiSettingStatus" class="mini-status"></span>
+          </div>
+          <div class="setting-note ai-note">Key 仅保存在你电脑的本地配置文件中（不加密），由本地服务调用，网页不会回显完整 Key。不要在公用电脑保存。接口需兼容 OpenAI Chat Completions 格式。</div>
+        </div>
+      </div>
+
+      <div class="setting-section">
+      <div class="setting-row">
+        <div>
+          <strong>学习数据</strong>
+          <span>导出后换电脑也可以恢复</span>
+        </div>
+        <div class="inline-actions">
+          <button id="exportDataBtn" class="btn soft">导出</button>
+          <button id="importDataBtn" class="btn soft">导入</button>
+          <input id="importFile" type="file" accept="application/json" class="hidden" />
+        </div>
+      </div>
+
+      <div class="setting-row danger-row">
+        <div>
+          <strong>重置本地学习记录</strong>
+          <span>会清除关卡进度、代码和错误统计</span>
+        </div>
+        <button id="resetProgressBtn" class="btn danger-soft">重置</button>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
+  <script src="lessons.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.57.0/min/vs/loader.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

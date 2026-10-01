@@ -1,0 +1,19 @@
+# PyPath local/private data
+user-data/
+.update-backup/
+update-status.json
+.pypath-port
+.pypath-server.pid
+.pypath-server.out.log
+.pypath-server.err.log
+*.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.py[cod]

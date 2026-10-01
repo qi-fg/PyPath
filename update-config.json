@@ -1,0 +1,5 @@
+{
+  "autoCheck": true,
+  "channel": "stable",
+  "manifestUrl": "https://raw.githubusercontent.com/qi-fg/PyPath/main/update-manifest.json"
+}

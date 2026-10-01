@@ -1,6 +1,6 @@
 {
   "version": "2.1.1",
-  "downloadUrl": "https://raw.githubusercontent.com/qi-fg/PyPath/main/releases/PyPath-V2.1.1.zip",
+  "downloadUrl": "https://github.com/qi-fg/PyPath/releases/download/v2.1.1/PyPath-V2.1.1.zip",
   "sha256": "6f28becca673492d1a63221c7d16f607dc0e382b36b5e063a75a75ee9b3f89aa",
   "notes": "Bind PyPath to the GitHub update channel and enable online update checks."
 }
