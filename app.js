@@ -162,6 +162,8 @@ function renderCurrentLesson() {
   $('feedbackBox').className = solved ? 'feedback good' : 'feedback neutral';
   $('feedbackBox').textContent = solved ? '✅ 这一关已经通过。你可以继续修改代码练习，或者进入下一关。' : '写完代码后点击“运行代码”。';
   $('nextBtn').classList.toggle('hidden', !solved || state.current >= lessons.length - 1);
+  if (solved) renderSolutionExplanation(lesson, code);
+  else hideSolutionExplanation();
   $('attemptsText').textContent = `尝试 ${state.attemptsByLesson[lesson.id] || 0} 次`;
 
   const hintLevel = state.hintLevelByLesson[lesson.id] || 0;
@@ -175,6 +177,65 @@ function renderCurrentLesson() {
   renderPrediction(lesson);
   clearTutor(false);
   tutorSay(`这一关我们只专注一个目标：${lesson.task}\n\n先自己改代码。卡住了再点“我看不懂”或“给一点提示”。`);
+}
+
+
+function plainConcept(lesson) {
+  const temp = document.createElement('div');
+  temp.innerHTML = lesson.concept || '';
+  return (temp.textContent || temp.innerText || '').trim();
+}
+
+function buildPitfalls(lesson) {
+  if (Array.isArray(lesson.pitfalls) && lesson.pitfalls.length) return lesson.pitfalls;
+  const items = [];
+  const title = (lesson.title || '') + ' ' + plainConcept(lesson);
+  if (/if|elif|else|判断|条件/.test(title)) items.push('忘记在条件语句末尾写冒号，或者缩进不一致。');
+  if (/for|while|range|循环/.test(title)) items.push('循环边界写错，或者循环变量没有正确更新。');
+  if (/input|类型|int|float/.test(title)) items.push('忘记 input() 默认返回字符串，直接拿它和数字做运算。');
+  if (/列表|list|range/.test(title)) items.push('把“最后一个值”和“停止位置”混淆，出现差一位错误。');
+  if (/函数|return|def/.test(title)) items.push('函数里算出了结果，但忘记 return，导致调用结果是 None。');
+  if (/Bug|调试/.test(title)) items.push('一次改太多行，反而很难确认到底是哪一处修好了问题。');
+  if (lesson.hints && lesson.hints[0]) items.push('只记答案而不理解：' + lesson.hints[0]);
+  while (items.length < 2) items.push('代码能运行不等于真正理解；通过后要能说出每一行改变了什么。');
+  return items.slice(0, 3);
+}
+
+function renderSolutionExplanation(lesson, code = getCode()) {
+  if (!lesson) return;
+  const panel = $('solutionPanel');
+  if (!panel) return;
+
+  $('solutionKicker').textContent = lesson.boss ? '阶段 BOSS 详解' : '本题详解';
+  $('solutionTitle').textContent = lesson.boss ? '把这一阶段的知识串起来' : '为什么这道题这样写？';
+  $('solutionUserCode').textContent = String(code || '').trim() || '(没有代码)';
+  $('solutionConcept').textContent = lesson.detailConcept || plainConcept(lesson) || lesson.task;
+  $('solutionWhy').textContent = lesson.detailWhy || lesson.simpleExplain || lesson.codeExplain || '先理解代码里每个变量和操作分别负责什么。';
+  $('solutionWalkthrough').textContent = lesson.walkthrough || lesson.codeExplain || lesson.simpleExplain || '从第一行开始，按 Python 实际执行顺序逐行理解。';
+
+  const list = $('solutionPitfalls');
+  list.innerHTML = '';
+  buildPitfalls(lesson).forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    list.appendChild(li);
+  });
+
+  $('solutionTakeaway').textContent = lesson.takeaway || lesson.simpleExplain || plainConcept(lesson) || '能独立重新写出这题，比记住答案更重要。';
+
+  const boss = $('bossReview');
+  if (lesson.boss) {
+    boss.classList.remove('hidden');
+    $('bossReviewText').textContent = lesson.bossReview || 'BOSS 关的重点不是某一条语法，而是你能否自己判断该用哪些工具、把多个步骤组合起来并通过运行结果完成调试。';
+  } else {
+    boss.classList.add('hidden');
+  }
+
+  panel.classList.remove('hidden');
+}
+
+function hideSolutionExplanation() {
+  if ($('solutionPanel')) $('solutionPanel').classList.add('hidden');
 }
 
 function renderStats() {
@@ -380,6 +441,11 @@ async function runCode() {
       $('feedbackBox').textContent = '✅ 挑战成功。你不是只“看懂了”，而是真的把代码跑通了。';
       $('nextBtn').classList.toggle('hidden', state.current >= lessons.length - 1);
       tutorSay('很好，这次程序的实际输出和目标一致。先看一眼你刚刚改的那一行，确认自己知道为什么它现在能工作。', 'good');
+      renderSolutionExplanation(lesson, code);
+      setTimeout(() => {
+        const panel = $('solutionPanel');
+        if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
     } else {
       state.stats.wrongAnswers = (state.stats.wrongAnswers || 0) + 1;
       $('feedbackBox').className = 'feedback warn';
@@ -741,6 +807,7 @@ $('resetBtn').addEventListener('click', () => {
   $('consoleOutput').textContent = '已恢复本关初始代码。';
   $('feedbackBox').className = 'feedback neutral';
   $('feedbackBox').textContent = '重新来一次。';
+  hideSolutionExplanation();
   tutorSay('已经恢复初始代码。建议这次一次只改一小步，每改一步就想一下“这一行会改变什么”。', 'system');
 });
 $('hintBtn').addEventListener('click', revealHint);
