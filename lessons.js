@@ -529,3 +529,69 @@ window.LESSONS = [
   ]
 }
 ];
+
+
+window.LESSON_DETAILS_V221 = {
+  1: {
+    walkthrough: 'Python 先计算 print() 括号里的字符串，然后把这段字符串写到标准输出。字符串本身不会被修改。',
+    takeaway: 'print() 是“把结果显示出来”；引号包住的是字符串，不是变量名。',
+    pitfalls: ['漏写括号或引号。', '把中文全角引号当成 Python 引号。', '只看输出结果，不知道 print() 和字符串分别负责什么。']
+  },
+  2: {
+    walkthrough: '程序仍然只执行一次 print()。真正变化的是传给 print() 的字符串内容，因此输出也随之改变。',
+    takeaway: '读代码时要能定位“哪一小部分控制最终行为”。',
+    pitfalls: ['改了 print 这个函数名，而不是修改字符串内容。', '多输出了额外文字，导致自动判题不一致。']
+  },
+  3: {
+    walkthrough: '第一行先创建 name 并保存字符串；执行 print 时 Python 再读取 name 当前保存的值，与固定文字一起输出。',
+    takeaway: '变量是给数据起名字；后面使用变量名，就是读取它当前保存的值。',
+    pitfalls: ['把 name 写成 "name"，这样输出的是文字 name。', '变量定义和使用时拼写不一致。']
+  },
+  4: {
+    walkthrough: 'Python 先把 12 保存到 a，把 8 保存到 b；计算 a + b 得到 20；最后 print 显示 20。',
+    takeaway: '数字变量可以直接参与运算；没有引号的 12 是整数，有引号的 "12" 是字符串。',
+    pitfalls: ['给数字加上引号后再相加，得到字符串拼接。', '只写 a + b 却没有 print，交互式脚本不会自动显示结果。']
+  },
+  5: {
+    walkthrough: 'input() 读取一行输入并返回字符串；赋值给 name；print 再使用 name 输出问候语。',
+    takeaway: 'input() 默认得到字符串，通常先保存到变量，再根据需要处理。',
+    pitfalls: ['忘记 input() 的返回值要保存或使用。', '把输入框里的值误以为代码中的固定常量。']
+  },
+  6: {
+    walkthrough: '先得到 score=85；计算 score >= 60 得到 True；因此进入 if 的缩进代码块并输出“及格”。',
+    takeaway: 'if 只在条件为 True 时执行缩进代码；冒号和缩进都是语法的一部分。',
+    pitfalls: ['if 行末漏冒号。', '下一行没有缩进。', '把 >= 写成 >，导致边界 60 判断错误。']
+  },
+  7: {
+    walkthrough: 'range(1, 4) 产生 1、2、3；for 让 i 依次取得这三个值；print(i) 因此执行三次。',
+    takeaway: 'for 的核心不是“重复三次”，而是让循环变量依次取得序列里的每个值。',
+    pitfalls: ['把 range(1, 4) 误认为会包含 4。', '循环体没有缩进。']
+  },
+  8: {
+    walkthrough: 'range(2, 6) 的 stop=6 不包含在序列中，所以 i 依次得到 2、3、4、5。',
+    takeaway: 'range(start, stop) 通常是左闭右开：包含 start，不包含 stop。',
+    pitfalls: ['为了输出 5 把 stop 写成 5。', '把 range 的第二个参数理解成“最后一个数字”。']
+  },
+  9: {
+    walkthrough: 'scores 保存三个浮点数；max(scores) 遍历并比较这些值，返回最大的 98.41；print 再输出它。',
+    takeaway: '遇到常见操作先想到 Python 内置函数，不必每次都手写循环。',
+    pitfalls: ['把 max 写成字符串。', '写 max 但忘记加括号调用函数。']
+  },
+  10: {
+    walkthrough: 'for score in scores 直接从列表中逐个取值，不需要自己维护下标；循环体每次输出当前 score。',
+    takeaway: '如果只需要元素本身，优先直接遍历列表，而不是先 range(len(...))。',
+    pitfalls: ['把 score 当成下标使用。', '为了遍历元素写了不必要的复杂下标循环。']
+  },
+  11: {
+    walkthrough: '调用 add(3, 5) 时 a=3、b=5；函数内部计算 a+b；return 把 8 返回给调用位置；print 输出 8。',
+    takeaway: '函数的三个关键点：参数接收输入、函数体处理、return 返回结果。',
+    pitfalls: ['函数里只写 a + b，没有 return。', '把 print 当成 return；打印了结果但函数本身仍返回 None。']
+  },
+  12: {
+    walkthrough: 'total 初始为 0。循环每次应该把当前 n 加到旧 total 上：0→1→3→6→10→15。原代码 total=n 会不断覆盖旧值，所以最后只剩 5。',
+    takeaway: '调试时要分清“赋值覆盖”和“基于旧值更新”。total = n 与 total += n 的语义完全不同。',
+    pitfalls: ['看到输出 5 就去修改 print，而真正的问题在循环状态更新。', '一次改很多行，导致无法确认真正的 Bug。'],
+    bossReview: '你已经把变量、列表、循环和调试串起来了。真正的能力不是记住 total += n，而是能跟踪变量在每一次循环之后变成什么。'
+  }
+};
+window.LESSONS.forEach(lesson => Object.assign(lesson, window.LESSON_DETAILS_V221[lesson.id] || {}));
