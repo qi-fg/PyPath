@@ -1,7 +1,7 @@
 const lessons = window.LESSONS || [];
 const $ = (id) => document.getElementById(id);
 const STORAGE_KEY = 'pypath-state';
-const APP_DATA_FORMAT = 4;
+const APP_DATA_FORMAT = 5;
 
 function freshState() {
   return {
@@ -71,8 +71,8 @@ let pyodide = null;
 let running = false;
 let monacoEditor = null;
 let suppressEditorSave = false;
-let appVersion = '3.0.0';
-let displayVersion = '3.0.0';
+let appVersion = '3.0.2';
+let displayVersion = '1.0.0';
 let localServiceReady = false;
 let aiState = { enabled: false, configured: false, provider: '', model: '' };
 let lastRunOutput = '';
