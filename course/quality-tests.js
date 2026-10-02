@@ -512,11 +512,6 @@
         "has_ticket": "True"
       },
       "expected": "enter"
-    },
-    {
-      "label": "使用题目要求的布尔运算符",
-      "checkCode": "assert any(type(n.op).__name__=='And' for n in __pypath_nodes('BoolOp'))",
-      "expected": "enter"
     }
   ],
   "s03-l06": [
@@ -550,11 +545,6 @@
         "is_admin": "True",
         "is_owner": "True"
       },
-      "expected": "edit"
-    },
-    {
-      "label": "使用题目要求的布尔运算符",
-      "checkCode": "assert any(type(n.op).__name__=='Or' for n in __pypath_nodes('BoolOp'))",
       "expected": "edit"
     }
   ],

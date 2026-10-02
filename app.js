@@ -71,13 +71,15 @@ let pyodide = null;
 let running = false;
 let monacoEditor = null;
 let suppressEditorSave = false;
-let appVersion = '3.0.4';
-let displayVersion = '1.0.1';
+let appVersion = '3.0.5';
+let displayVersion = '1.0.2';
 let localServiceReady = false;
 let aiState = { enabled: false, configured: false, provider: '', model: '' };
 let lastRunOutput = '';
 let lastRunError = '';
 let tutorBusy = false;
+let tutorHistory = [];
+let tutorGeneration = 0;
 let learningDataSynced = false;
 let learningSaveTimer = null;
 const learningCache = { codeByLesson: {}, stdinByLesson: {} };
@@ -332,10 +334,7 @@ function renderCurrentLesson() {
   $('lessonIntro').textContent = lesson.intro;
   $('lessonTask').textContent = lesson.task;
   $('conceptBox').innerHTML = lesson.concept;
-  const validationInputs = [...new Set((lesson.hiddenTests || []).flatMap(test => Object.keys(test.overrides || {})))];
-  $('validationNote').textContent = validationInputs.length
-    ? '示例之外还会更换 ' + validationInputs.join('、') + ' 验证逻辑。请保留这些输入变量，用它们计算结果。'
-    : '除示例输出，还会校验题目要求的操作、语法或返回值。';
+
 
   const codeKey = String(lesson.id);
   const code = Object.prototype.hasOwnProperty.call(learningCache.codeByLesson, codeKey)
@@ -729,6 +728,8 @@ async function initLocalService() {
 }
 
 function clearTutor(showMessage = true) {
+  tutorHistory = [];
+  tutorGeneration++;
   $('tutorMessages').innerHTML = '';
   if (showMessage) tutorSay('对话已清空。你可以继续写代码，有问题再叫我。', 'system');
 }
@@ -1080,6 +1081,10 @@ function localTutorAnswer(question) {
     return '你还没有运行过当前代码。先点一次“运行代码”，把真实报错拿到，再判断会更准确。';
   }
 
+  if (/知识点|讲一下|讲讲|讲解|解释一下|原理/.test(lower)) {
+    return `这一题的知识点：${conceptAsText(lesson)}\n\n${lesson.simpleExplain}`;
+  }
+
   if (/这行|解释|什么意思|看不懂|作用/.test(lower)) {
     return `${lesson.simpleExplain}\n\n当前关卡最重要的是：${conceptAsText(lesson)}`;
   }
@@ -1118,6 +1123,7 @@ async function askTutor(question) {
   }
 
   tutorBusy = true;
+  const generation = tutorGeneration;
   $('sendTutorBtn').disabled = true;
   const loading = tutorSay('AI 导师正在看你的代码…', 'loading');
   try {
@@ -1127,6 +1133,7 @@ async function askTutor(question) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         question: q,
+        history: tutorHistory.slice(-12),
         code: getCode(),
         output: lastRunError || lastRunOutput,
         hintLevel: state.hintLevelByLesson[lesson.id] || 0,
@@ -1135,11 +1142,16 @@ async function askTutor(question) {
     });
     const data = await resp.json().catch(() => ({}));
     loading.remove();
+    if (generation !== tutorGeneration) return;
     if (!resp.ok || !data.ok) throw new Error(data.error || `HTTP ${resp.status}`);
-    tutorSay(data.answer || 'AI 没有返回文字。');
+    if (typeof data.answer !== 'string' || !data.answer.trim()) throw new Error('AI 接口返回了空正文');
+    tutorSay(data.answer);
+    tutorHistory.push({ role: 'user', content: q }, { role: 'assistant', content: data.answer });
+    tutorHistory = tutorHistory.slice(-12);
   } catch (err) {
     loading.remove();
-    tutorSay(`AI 暂时没有连通：${err.message || err}\n\n我先切回本地提示继续帮你。`, 'system');
+    if (generation !== tutorGeneration) return;
+    tutorSay(`AI 本次回答失败：${err.message || err}\n\n这次由本地导师继续回答。`, 'system');
     tutorSay(localTutorAnswer(q));
   } finally {
     tutorBusy = false;

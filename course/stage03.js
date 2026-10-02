@@ -63,7 +63,7 @@ addEngineeringStage(3, [
   },
   {
     "title": "and：必须同时成立",
-    "task": "入场规则：年龄至少 18 岁（含 18 岁），并且有票。给定 age=20、has_ticket=True，用 and 同时判断这两个条件；满足时输出 enter，否则不输出。不要把年龄条件写成 age == 20。",
+    "task": "入场规则：年龄至少 18 岁（含 18 岁）且持有门票。给定 age=20、has_ticket=True，符合规则时输出 enter，否则不输出。",
     "concept": "and 逻辑与",
     "starter": "age = 20\nhas_ticket = True\n# 判断两个条件\n",
     "solution": "age = 20\nhas_ticket = True\n# 判断两个条件\n\nif age >= 18 and has_ticket:\n    print('enter')",
@@ -156,7 +156,7 @@ addEngineeringStage(3, [
   },
   {
     "title": "修复边界条件 Bug",
-    "task": "规则是 18 岁及以上允许进入。当前 age=18，却输出 deny。修复判断并输出 allow。",
+    "task": "入场规则：年龄至少 18 岁（含 18 岁）时输出 allow，否则输出 deny。给定 age=18，修复代码，使其符合规则。",
     "concept": "边界值与 >= / >",
     "starter": "age = 18\nif age > 18:\n    print('allow')\nelse:\n    print('deny')\n",
     "solution": "age = 18\nif age >= 18:\n    print('allow')\nelse:\n    print('deny')",

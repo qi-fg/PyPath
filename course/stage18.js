@@ -121,7 +121,7 @@ addEngineeringStage(18, [
   },
   {
     "title": "修复生成器一次性消费",
-    "task": "gen=(n for n in [1,2,3])。代码 sum(gen) 后再 list(gen) 得到空列表。修复为先转列表，输出6与[1,2,3]。",
+    "task": "给定 gen=(n for n in [1,2,3])。修复下面的代码，输出元素总和 6 与完整元素列表 [1, 2, 3]，每项一行。",
     "concept": "生成器是一次性惰性迭代器",
     "starter": "gen = (n for n in [1, 2, 3])\nprint(sum(gen))\nprint(list(gen))\n",
     "solution": "values = list(n for n in [1, 2, 3])\nprint(sum(values))\nprint(values)",

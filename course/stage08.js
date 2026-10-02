@@ -1,21 +1,23 @@
 addEngineeringStage(8, [
   {
     "title": "修复 SyntaxError",
-    "task": "修复缺少右括号的代码，让它输出 hello。",
+    "task": "修复下面的代码，使程序能够正常运行并输出 hello。",
     "concept": "SyntaxError 与语法结构",
     "starter": "print('hello'\n",
     "solution": "print('hello')",
     "expected": "hello",
-    "why": "语法错误意味着 Python 连程序结构都无法正确解析，要先看报错位置附近的符号是否配对。"
+    "why": "语法错误意味着 Python 连程序结构都无法正确解析，要先看报错位置附近的符号是否配对。",
+    "hint1": "修复缺少右括号的代码，让它输出 hello。"
   },
   {
     "title": "修复 NameError",
-    "task": "下面代码变量名拼写不一致。修复后输出 Ada。",
+    "task": "修复下面的代码，使程序能够正常运行并输出 Ada。",
     "concept": "NameError 与变量命名",
     "starter": "username = 'Ada'\nprint(user_name)\n",
     "solution": "username = 'Ada'\nprint(username)",
     "expected": "Ada",
-    "why": "NameError 常见原因是变量未定义或拼写、大小写不一致。"
+    "why": "NameError 常见原因是变量未定义或拼写、大小写不一致。",
+    "hint1": "下面代码变量名拼写不一致。修复后输出 Ada。"
   },
   {
     "title": "修复 TypeError",
@@ -28,12 +30,13 @@ addEngineeringStage(8, [
   },
   {
     "title": "修复 IndexError",
-    "task": "items=['a','b','c']，修复 range(4) 越界，让它输出 a、b、c。",
+    "task": "给定 items=['a','b','c']，修复下面的代码，依次输出列表中的每个元素，每项一行。",
     "concept": "IndexError 与序列边界",
     "starter": "items = ['a', 'b', 'c']\nfor i in range(4):\n    print(items[i])\n",
     "solution": "items = ['a', 'b', 'c']\nfor i in range(len(items)):\n    print(items[i])",
     "expected": "a\nb\nc",
-    "why": "长度为3的列表有效下标只有0、1、2，循环边界要来自实际数据。"
+    "why": "长度为3的列表有效下标只有0、1、2，循环边界要来自实际数据。",
+    "hint1": "items=['a','b','c']，修复 range(4) 越界，让它输出 a、b、c。"
   },
   {
     "title": "修复 KeyError",
@@ -107,12 +110,13 @@ addEngineeringStage(8, [
   },
   {
     "title": "一次只修一个问题",
-    "task": "代码有两个问题：拼写错误和类型错误。修复后输出 21。",
+    "task": "修复下面的代码，使程序能够正常运行并输出 21。",
     "concept": "按 traceback 从最先阻塞的问题开始调试",
     "starter": "age = '20'\nprint(agge + 1)\n",
     "solution": "age = '20'\nprint(int(age) + 1)",
     "expected": "21",
-    "why": "调试应先解决当前 traceback 指向的第一处阻塞错误，再重新运行暴露下一层问题。"
+    "why": "调试应先解决当前 traceback 指向的第一处阻塞错误，再重新运行暴露下一层问题。",
+    "hint1": "代码有两个问题：拼写错误和类型错误。修复后输出 21。"
   },
   {
     "title": "修复订单处理器",

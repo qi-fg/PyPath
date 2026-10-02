@@ -27,6 +27,8 @@ jobs:
           python3 -m py_compile server.py
           node scripts/validate_course.js
           node scripts/validate_judge.js
+          node scripts/validate_tutor.js
+          python3 scripts/validate_tutor.py
 
       - name: Read versions
         shell: bash

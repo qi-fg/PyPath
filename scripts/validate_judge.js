@@ -45,6 +45,8 @@ const bad=[
 ];
 for(const [key,code] of bad)if(passes(byKey[key],code))throw Error('Invalid program accepted: '+key);
 const alternatives=[
+ ['s03-l05',"age=20\nhas_ticket=True\nif age>=18:\n    if has_ticket:\n        print('enter')"],
+ ['s03-l06',"is_admin=False\nis_owner=True\nif is_admin:\n    print('edit')\nelif is_owner:\n    print('edit')"],
  ['s01-l11',byKey['s01-l11'].solution.replace('total += n','total = total + n')],
  ['s03-l05',"age=20\nhas_ticket=True\nif has_ticket and age>=18:\n    print('enter')"],
  ['s03-l11',"age=18\nif age<18:\n    print('deny')\nelse:\n    print('allow')"],

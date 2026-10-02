@@ -235,6 +235,8 @@ def call_ai(config: dict, payload: dict) -> str:
     system = (
         "你是 PyPath 的 Python 初学者导师。用户几乎没有 Python 基础。"
         "请用简短、具体、可执行的中文回答。教学顺序是：先指出观察点，再给小提示，最后才给完整写法。"
+        "用户要求讲解知识点时，直接解释概念、适用场景、边界条件，并给一个不同于本题的小例子；不要只催用户写代码或点击提示。"
+        "也可以回答其他 Python 学习问题。当前关卡是参考背景，不限制用户的提问范围。"
         "除非用户明确要求完整答案，或者已经使用到第 3 级提示，否则不要直接贴出整题答案。"
         "解释报错时优先解释控制台最后一行，并只建议一次改一个地方。"
         "不要假装代码已经运行；只依据提供的代码和运行输出。"
@@ -247,10 +249,15 @@ def call_ai(config: dict, payload: dict) -> str:
         f"当前代码：\n{code}\n\n"
         f"最近运行结果：\n{output or '(还没有运行)'}\n"
     )
-    messages = [
-        {"role": "system", "content": system},
-        {"role": "user", "content": context + "\n用户问题：" + question},
-    ]
+    messages = [{"role": "system", "content": system}]
+    history = payload.get("history")
+    if isinstance(history, list):
+        for item in history[-12:]:
+            if isinstance(item, dict) and item.get("role") in ("user", "assistant"):
+                text = str(item.get("content", "")).strip()[:3000]
+                if text:
+                    messages.append({"role": item["role"], "content": text})
+    messages.append({"role": "user", "content": context + "\n用户问题：" + question})
     body = json.dumps({
         "model": model,
         "messages": messages,
@@ -282,8 +289,16 @@ def call_ai(config: dict, payload: dict) -> str:
     except Exception as exc:
         raise RuntimeError("AI 接口返回格式不是 OpenAI 兼容格式") from exc
     if isinstance(content, list):
-        content = "\n".join(str(x.get("text", "")) if isinstance(x, dict) else str(x) for x in content)
-    return str(content).strip()
+        parts = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict) and isinstance(block.get("text"), str):
+                parts.append(block["text"])
+        content = "\n".join(parts)
+    if not isinstance(content, str) or not content.strip():
+        raise RuntimeError("AI 接口返回了空正文，没有可显示的回答")
+    return content.strip()
 
 
 def safe_extract(zf: zipfile.ZipFile, target: Path) -> None:
