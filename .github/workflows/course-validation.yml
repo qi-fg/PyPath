@@ -1,0 +1,30 @@
+name: Validate curriculum
+on:
+  pull_request:
+    paths:
+      - 'course/**'
+      - 'scripts/**'
+      - 'app.js'
+      - 'server.py'
+      - 'index.html'
+  push:
+    branches: [main]
+    paths:
+      - 'course/**'
+      - 'scripts/**'
+      - 'app.js'
+      - 'server.py'
+      - 'index.html'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate references and judge regressions
+        run: |
+          node --check app.js
+          python3 -m py_compile server.py
+          node scripts/validate_course.js
+          node scripts/validate_judge.js

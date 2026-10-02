@@ -19,7 +19,7 @@ addEngineeringStage(2, [
     "concept": "int() 类型转换",
     "starter": "age = input()\n# 转成整数并加 1\n",
     "stdin": "20",
-    "solution": "age = int(age)\nprint(age + 1)",
+    "solution": "age = input()\n# 转成整数并加 1\n\nage = int(age)\nprint(age + 1)",
     "expected": "21",
     "must": [
       "int"
@@ -36,7 +36,7 @@ addEngineeringStage(2, [
     "concept": "float() 浮点数转换",
     "starter": "price = input()\n# 转成浮点数并计算\n",
     "stdin": "19.5",
-    "solution": "price = float(price)\nprint(price * 2)",
+    "solution": "price = input()\n# 转成浮点数并计算\n\nprice = float(price)\nprint(price * 2)",
     "expected": "39.0",
     "must": [
       "float"
@@ -52,7 +52,7 @@ addEngineeringStage(2, [
     "task": "name='Ada'，使用 f-string 输出：User: Ada",
     "concept": "f-string 格式化",
     "starter": "name = 'Ada'\n# 使用 f-string\n",
-    "solution": "print(f'User: {name}')",
+    "solution": "name = 'Ada'\n# 使用 f-string\n\nprint(f'User: {name}')",
     "expected": "User: Ada",
     "must": [
       "f"
@@ -68,7 +68,7 @@ addEngineeringStage(2, [
     "task": "text='python'，输出字符数量 6。",
     "concept": "len() 长度",
     "starter": "text = 'python'\n# 输出长度\n",
-    "solution": "print(len(text))",
+    "solution": "text = 'python'\n# 输出长度\n\nprint(len(text))",
     "expected": "6",
     "why": "len() 返回字符串或容器包含的元素数量。",
     "walk": "字符串 python 含 6 个字符，因此 len(text) 返回 6。",
@@ -81,7 +81,7 @@ addEngineeringStage(2, [
     "task": "word='engineer'，输出第一个字符 e。",
     "concept": "字符串下标从 0 开始",
     "starter": "word = 'engineer'\n# 输出第一个字符\n",
-    "solution": "print(word[0])",
+    "solution": "word = 'engineer'\n# 输出第一个字符\n\nprint(word[0])",
     "expected": "e",
     "why": "Python 序列使用从 0 开始的下标。",
     "walk": "word[0] 读取位置 0，对应字符串的第一个字符 e。",
@@ -94,7 +94,7 @@ addEngineeringStage(2, [
     "task": "text='backend'，输出 back。",
     "concept": "切片 [start:stop] 左闭右开",
     "starter": "text = 'backend'\n# 使用切片输出 back\n",
-    "solution": "print(text[0:4])",
+    "solution": "text = 'backend'\n# 使用切片输出 back\n\nprint(text[0:4])",
     "expected": "back",
     "why": "切片 stop 位置不包含在结果中，因此 0:4 取得下标 0 到 3。",
     "walk": "依次取 b、a、c、k，在下标 4 之前停止。",
@@ -108,7 +108,7 @@ addEngineeringStage(2, [
     "concept": "str.strip()",
     "starter": "name = input()\n# 清理两端空格\n",
     "stdin": "  Alice  ",
-    "solution": "name = name.strip()\nprint(name)",
+    "solution": "name = input()\n# 清理两端空格\n\nname = name.strip()\nprint(name)",
     "expected": "Alice",
     "must": [
       "strip"
@@ -124,7 +124,7 @@ addEngineeringStage(2, [
     "task": "email='USER@EXAMPLE.COM'，输出 user@example.com。",
     "concept": "str.lower()",
     "starter": "email = 'USER@EXAMPLE.COM'\n# 统一为小写\n",
-    "solution": "print(email.lower())",
+    "solution": "email = 'USER@EXAMPLE.COM'\n# 统一为小写\n\nprint(email.lower())",
     "expected": "user@example.com",
     "must": [
       "lower"
@@ -140,7 +140,7 @@ addEngineeringStage(2, [
     "task": "line='alice,20,tokyo'，按逗号拆分并输出第二项 20。",
     "concept": "str.split() 与列表",
     "starter": "line = 'alice,20,tokyo'\n# 拆分并输出年龄字段\n",
-    "solution": "parts = line.split(',')\nprint(parts[1])",
+    "solution": "line = 'alice,20,tokyo'\n# 拆分并输出年龄字段\n\nparts = line.split(',')\nprint(parts[1])",
     "expected": "20",
     "must": [
       "split"
@@ -156,7 +156,7 @@ addEngineeringStage(2, [
     "task": "parts=['api','v1','users']，用 / 连接并输出 api/v1/users。",
     "concept": "str.join()",
     "starter": "parts = ['api', 'v1', 'users']\n# 用 / 连接\n",
-    "solution": "print('/'.join(parts))",
+    "solution": "parts = ['api', 'v1', 'users']\n# 用 / 连接\n\nprint('/'.join(parts))",
     "expected": "api/v1/users",
     "must": [
       "join"

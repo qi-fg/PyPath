@@ -4,7 +4,7 @@ addEngineeringStage(15, [
     "task": "response={'status':200}，状态码在200-299时输出 success。",
     "concept": "HTTP 2xx 表示成功响应",
     "starter": "response = {'status': 200}\n# 判断是否成功\n",
-    "solution": "if 200 <= response['status'] < 300:\n    print('success')",
+    "solution": "response = {'status': 200}\n# 判断是否成功\n\nif 200 <= response['status'] < 300:\n    print('success')",
     "expected": "success",
     "why": "HTTP 客户端不能只看响应体，还要先判断状态码是否表示成功。"
   },
@@ -13,7 +13,7 @@ addEngineeringStage(15, [
     "task": "response_text='{\"name\":\"Ada\"}'，json.loads 后输出 Ada。",
     "concept": "API 响应 JSON 解码",
     "starter": "import json\nresponse_text = '{\"name\":\"Ada\"}'\n# 解析\n",
-    "solution": "data = json.loads(response_text)\nprint(data['name'])",
+    "solution": "import json\nresponse_text = '{\"name\":\"Ada\"}'\n# 解析\n\ndata = json.loads(response_text)\nprint(data['name'])",
     "expected": "Ada",
     "must": [
       "loads"
@@ -25,7 +25,7 @@ addEngineeringStage(15, [
     "task": "用 urllib.parse.urlencode 把 {'page':2,'q':'python'} 编码，输出 page=2&q=python。",
     "concept": "URL query 参数编码",
     "starter": "from urllib.parse import urlencode\nparams = {'page': 2, 'q': 'python'}\n# 编码\n",
-    "solution": "print(urlencode(params))",
+    "solution": "from urllib.parse import urlencode\nparams = {'page': 2, 'q': 'python'}\n# 编码\n\nprint(urlencode(params))",
     "expected": "page=2&q=python",
     "must": [
       "urlencode"
@@ -46,7 +46,7 @@ addEngineeringStage(15, [
     "task": "payload={'title':'task','done':False}，json.dumps(sort_keys=True) 输出稳定 JSON。",
     "concept": "JSON request body",
     "starter": "import json\npayload = {'title': 'task', 'done': False}\n# 序列化\n",
-    "solution": "print(json.dumps(payload, sort_keys=True))",
+    "solution": "import json\npayload = {'title': 'task', 'done': False}\n# 序列化\n\nprint(json.dumps(payload, sort_keys=True))",
     "expected": "{\"done\": false, \"title\": \"task\"}",
     "must": [
       "dumps"
@@ -58,7 +58,7 @@ addEngineeringStage(15, [
     "task": "data={'items':[{'id':1},{'id':2}]}，逐行输出1、2。",
     "concept": "API 常见 items 列表结构",
     "starter": "data = {'items': [{'id': 1}, {'id': 2}]}\n# 遍历 items\n",
-    "solution": "for item in data['items']:\n    print(item['id'])",
+    "solution": "data = {'items': [{'id': 1}, {'id': 2}]}\n# 遍历 items\n\nfor item in data['items']:\n    print(item['id'])",
     "expected": "1\n2",
     "why": "接口响应常把多条资源放在数组字段中，客户端再逐条处理。"
   },
@@ -67,7 +67,7 @@ addEngineeringStage(15, [
     "task": "response={'status':404,'json':{'error':'not found'}}，非200时输出 not found。",
     "concept": "错误响应与错误字段",
     "starter": "response = {'status': 404, 'json': {'error': 'not found'}}\n# 处理错误\n",
-    "solution": "if response['status'] != 200:\n    print(response['json'].get('error', 'unknown'))",
+    "solution": "response = {'status': 404, 'json': {'error': 'not found'}}\n# 处理错误\n\nif response['status'] != 200:\n    print(response['json'].get('error', 'unknown'))",
     "expected": "not found",
     "why": "错误路径要有稳定的解析和降级逻辑，不能假设所有响应都成功。"
   },
@@ -76,7 +76,7 @@ addEngineeringStage(15, [
     "task": "pages=[[1,2],[3],[4,5]]，模拟逐页请求，把所有数据收集后输出 [1, 2, 3, 4, 5]。",
     "concept": "pagination 分页聚合",
     "starter": "pages = [[1, 2], [3], [4, 5]]\nall_items = []\n# 模拟逐页收集\n",
-    "solution": "for page in pages:\n    all_items.extend(page)\nprint(all_items)",
+    "solution": "pages = [[1, 2], [3], [4, 5]]\nall_items = []\n# 模拟逐页收集\n\nfor page in pages:\n    all_items.extend(page)\nprint(all_items)",
     "expected": "[1, 2, 3, 4, 5]",
     "why": "真实 API 往往分页返回结果，客户端需要循环请求并合并页面数据。"
   },
@@ -85,7 +85,7 @@ addEngineeringStage(15, [
     "task": "token='sk-secret-123456'，只输出前3位加 ***，目标 sk-***。",
     "concept": "敏感信息日志脱敏",
     "starter": "token = 'sk-secret-123456'\n# 脱敏输出\n",
-    "solution": "print(token[:3] + '***')",
+    "solution": "token = 'sk-secret-123456'\n# 脱敏输出\n\nprint(token[:3] + '***')",
     "expected": "sk-***",
     "why": "认证凭据不应进入日志或错误页面，调试信息也必须脱敏。"
   },
@@ -94,7 +94,7 @@ addEngineeringStage(15, [
     "task": "results=[False,False,True]，按顺序尝试，成功时输出 attempts=3 并停止。",
     "concept": "retry 重试与 break",
     "starter": "results = [False, False, True]\nattempts = 0\n# 模拟请求重试\n",
-    "solution": "for ok in results:\n    attempts += 1\n    if ok:\n        break\nprint(f'attempts={attempts}')",
+    "solution": "results = [False, False, True]\nattempts = 0\n# 模拟请求重试\n\nfor ok in results:\n    attempts += 1\n    if ok:\n        break\nprint(f'attempts={attempts}')",
     "expected": "attempts=3",
     "why": "临时网络失败可以有限重试，但必须有次数上限并在成功后停止。"
   },

@@ -4,7 +4,7 @@ addEngineeringStage(6, [
     "task": "user={'name':'Ada','role':'admin'}，输出 Ada。",
     "concept": "dict 使用键读取值",
     "starter": "user = {'name': 'Ada', 'role': 'admin'}\n# 输出 name\n",
-    "solution": "print(user['name'])",
+    "solution": "user = {'name': 'Ada', 'role': 'admin'}\n# 输出 name\n\nprint(user['name'])",
     "expected": "Ada",
     "must": [
       "["
@@ -16,7 +16,7 @@ addEngineeringStage(6, [
     "task": "config={'mode':'dev'}，读取不存在的 port，默认 8000，并输出 8000。",
     "concept": "dict.get(key, default)",
     "starter": "config = {'mode': 'dev'}\n# 安全读取 port\n",
-    "solution": "print(config.get('port', 8000))",
+    "solution": "config = {'mode': 'dev'}\n# 安全读取 port\n\nprint(config.get('port', 8000))",
     "expected": "8000",
     "must": [
       "get"
@@ -37,7 +37,7 @@ addEngineeringStage(6, [
     "task": "data={'b':2,'a':1}，按字母排序后逐行输出 a、b。",
     "concept": "dict.keys() 与 sorted()",
     "starter": "data = {'b': 2, 'a': 1}\n# 按顺序输出键\n",
-    "solution": "for key in sorted(data.keys()):\n    print(key)",
+    "solution": "data = {'b': 2, 'a': 1}\n# 按顺序输出键\n\nfor key in sorted(data.keys()):\n    print(key)",
     "expected": "a\nb",
     "must": [
       "keys",
@@ -50,7 +50,7 @@ addEngineeringStage(6, [
     "task": "metrics={'ok':3,'fail':1}，输出 ok 3 和 fail 1。",
     "concept": "dict.items()",
     "starter": "metrics = {'ok': 3, 'fail': 1}\n# 遍历键和值\n",
-    "solution": "for key, value in metrics.items():\n    print(key, value)",
+    "solution": "metrics = {'ok': 3, 'fail': 1}\n# 遍历键和值\n\nfor key, value in metrics.items():\n    print(key, value)",
     "expected": "ok 3\nfail 1",
     "must": [
       "items"
@@ -62,7 +62,7 @@ addEngineeringStage(6, [
     "task": "user={'profile':{'city':'Tokyo'}}，输出 Tokyo。",
     "concept": "嵌套字典逐层访问",
     "starter": "user = {'profile': {'city': 'Tokyo'}}\n# 输出城市\n",
-    "solution": "print(user['profile']['city'])",
+    "solution": "user = {'profile': {'city': 'Tokyo'}}\n# 输出城市\n\nprint(user['profile']['city'])",
     "expected": "Tokyo",
     "why": "嵌套结构需要从外层键逐层进入内层对象。"
   },
@@ -71,7 +71,7 @@ addEngineeringStage(6, [
     "task": "users=[{'name':'A'},{'name':'B'}]，逐行输出 A、B。",
     "concept": "列表中保存结构化字典",
     "starter": "users = [{'name': 'A'}, {'name': 'B'}]\n# 遍历输出 name\n",
-    "solution": "for user in users:\n    print(user['name'])",
+    "solution": "users = [{'name': 'A'}, {'name': 'B'}]\n# 遍历输出 name\n\nfor user in users:\n    print(user['name'])",
     "expected": "A\nB",
     "must": [
       "for"
@@ -96,7 +96,7 @@ addEngineeringStage(6, [
     "task": "把 nums=[1,2,3] 变成 {1:1,2:4,3:9}，并输出该字典。",
     "concept": "dict comprehension",
     "starter": "nums = [1, 2, 3]\n# 创建平方映射\n",
-    "solution": "squares = {n: n * n for n in nums}\nprint(squares)",
+    "solution": "nums = [1, 2, 3]\n# 创建平方映射\n\nsquares = {n: n * n for n in nums}\nprint(squares)",
     "expected": "{1: 1, 2: 4, 3: 9}",
     "must": [
       "for"

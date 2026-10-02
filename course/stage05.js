@@ -126,7 +126,7 @@ addEngineeringStage(5, [
     "task": "ids=[1,1,2,3,3]，转成集合后输出其长度 3。",
     "concept": "set 去重与唯一性",
     "starter": "ids = [1, 1, 2, 3, 3]\n# 转成集合并输出唯一数量\n",
-    "solution": "unique = set(ids)\nprint(len(unique))",
+    "solution": "ids = [1, 1, 2, 3, 3]\n# 转成集合并输出唯一数量\n\nunique = set(ids)\nprint(len(unique))",
     "expected": "3",
     "must": [
       "set"
@@ -142,7 +142,7 @@ addEngineeringStage(5, [
     "task": "a={'api','db','cache'}，b={'db','queue'}，输出共同元素数量 1。",
     "concept": "集合交集 &",
     "starter": "a = {'api', 'db', 'cache'}\nb = {'db', 'queue'}\n# 输出交集数量\n",
-    "solution": "common = a & b\nprint(len(common))",
+    "solution": "a = {'api', 'db', 'cache'}\nb = {'db', 'queue'}\n# 输出交集数量\n\ncommon = a & b\nprint(len(common))",
     "expected": "1",
     "why": "集合交集直接表达“两组中共同存在的元素”。",
     "walk": "只有 db 同时出现在 a 与 b，因此交集大小为1。",

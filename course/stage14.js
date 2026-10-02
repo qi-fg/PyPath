@@ -28,7 +28,7 @@ addEngineeringStage(14, [
     "task": "创建 users 表，参数化插入 Ada，再查询并输出 Ada。",
     "concept": "INSERT 与参数占位符 ?",
     "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE users (name TEXT)')\n# 参数化插入并查询\n",
-    "solution": "conn.execute('INSERT INTO users(name) VALUES (?)', ('Ada',))\nprint(conn.execute('SELECT name FROM users').fetchone()[0])",
+    "solution": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE users (name TEXT)')\n# 参数化插入并查询\n\nconn.execute('INSERT INTO users(name) VALUES (?)', ('Ada',))\nprint(conn.execute('SELECT name FROM users').fetchone()[0])",
     "expected": "Ada",
     "must": [
       "?"
@@ -40,7 +40,7 @@ addEngineeringStage(14, [
     "task": "插入 A、B，查询 name='B'，用 fetchone 输出 B。",
     "concept": "fetchone()",
     "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE users (name TEXT)')\nconn.executemany('INSERT INTO users VALUES (?)', [('A',), ('B',)])\n# 查询 B\n",
-    "solution": "row = conn.execute('SELECT name FROM users WHERE name=?', ('B',)).fetchone()\nprint(row[0])",
+    "solution": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE users (name TEXT)')\nconn.executemany('INSERT INTO users VALUES (?)', [('A',), ('B',)])\n# 查询 B\n\nrow = conn.execute('SELECT name FROM users WHERE name=?', ('B',)).fetchone()\nprint(row[0])",
     "expected": "B",
     "must": [
       "fetchone"
@@ -52,7 +52,7 @@ addEngineeringStage(14, [
     "task": "插入 1、2、3，按 n 排序查询，输出 [1, 2, 3]。",
     "concept": "fetchall()",
     "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE nums (n INTEGER)')\nconn.executemany('INSERT INTO nums VALUES (?)', [(3,), (1,), (2,)])\n# 查询并输出列表\n",
-    "solution": "rows = conn.execute('SELECT n FROM nums ORDER BY n').fetchall()\nprint([row[0] for row in rows])",
+    "solution": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE nums (n INTEGER)')\nconn.executemany('INSERT INTO nums VALUES (?)', [(3,), (1,), (2,)])\n# 查询并输出列表\n\nrows = conn.execute('SELECT n FROM nums ORDER BY n').fetchall()\nprint([row[0] for row in rows])",
     "expected": "[1, 2, 3]",
     "must": [
       "fetchall"
@@ -64,7 +64,7 @@ addEngineeringStage(14, [
     "task": "用户 Ada score=80，更新为95并输出95。",
     "concept": "UPDATE ... WHERE",
     "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE users (name TEXT, score INTEGER)')\nconn.execute(\"INSERT INTO users VALUES ('Ada', 80)\")\n# 更新 score\n",
-    "solution": "conn.execute('UPDATE users SET score=? WHERE name=?', (95, 'Ada'))\nprint(conn.execute(\"SELECT score FROM users WHERE name='Ada'\").fetchone()[0])",
+    "solution": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE users (name TEXT, score INTEGER)')\nconn.execute(\"INSERT INTO users VALUES ('Ada', 80)\")\n# 更新 score\n\nconn.execute('UPDATE users SET score=? WHERE name=?', (95, 'Ada'))\nprint(conn.execute(\"SELECT score FROM users WHERE name='Ada'\").fetchone()[0])",
     "expected": "95",
     "must": [
       "UPDATE"
@@ -76,7 +76,7 @@ addEngineeringStage(14, [
     "task": "表中 A、B，删除 A 后输出剩余数量1。",
     "concept": "DELETE ... WHERE",
     "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE users (name TEXT)')\nconn.executemany('INSERT INTO users VALUES (?)', [('A',), ('B',)])\n# 删除 A\n",
-    "solution": "conn.execute('DELETE FROM users WHERE name=?', ('A',))\nprint(conn.execute('SELECT COUNT(*) FROM users').fetchone()[0])",
+    "solution": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE users (name TEXT)')\nconn.executemany('INSERT INTO users VALUES (?)', [('A',), ('B',)])\n# 删除 A\n\nconn.execute('DELETE FROM users WHERE name=?', ('A',))\nprint(conn.execute('SELECT COUNT(*) FROM users').fetchone()[0])",
     "expected": "1",
     "must": [
       "DELETE"
@@ -88,7 +88,7 @@ addEngineeringStage(14, [
     "task": "插入 active 值 1,0,1，查询 active=1 数量并输出2。",
     "concept": "SQL COUNT 聚合",
     "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE users (active INTEGER)')\nconn.executemany('INSERT INTO users VALUES (?)', [(1,), (0,), (1,)])\n# 统计 active\n",
-    "solution": "count = conn.execute('SELECT COUNT(*) FROM users WHERE active=?', (1,)).fetchone()[0]\nprint(count)",
+    "solution": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE users (active INTEGER)')\nconn.executemany('INSERT INTO users VALUES (?)', [(1,), (0,), (1,)])\n# 统计 active\n\ncount = conn.execute('SELECT COUNT(*) FROM users WHERE active=?', (1,)).fetchone()[0]\nprint(count)",
     "expected": "2",
     "must": [
       "COUNT"
@@ -100,7 +100,7 @@ addEngineeringStage(14, [
     "task": "插入分数70,95,88，查询最高分并输出95。",
     "concept": "ORDER BY ... DESC LIMIT 1",
     "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE scores (score INTEGER)')\nconn.executemany('INSERT INTO scores VALUES (?)', [(70,), (95,), (88,)])\n# 查询最高分\n",
-    "solution": "row = conn.execute('SELECT score FROM scores ORDER BY score DESC LIMIT 1').fetchone()\nprint(row[0])",
+    "solution": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE scores (score INTEGER)')\nconn.executemany('INSERT INTO scores VALUES (?)', [(70,), (95,), (88,)])\n# 查询最高分\n\nrow = conn.execute('SELECT score FROM scores ORDER BY score DESC LIMIT 1').fetchone()\nprint(row[0])",
     "expected": "95",
     "must": [
       "ORDER BY",
@@ -113,7 +113,7 @@ addEngineeringStage(14, [
     "task": "设置 conn.row_factory=sqlite3.Row，查询 name='Ada'，用 row['name'] 输出 Ada。",
     "concept": "sqlite3.Row",
     "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.row_factory = sqlite3.Row\nconn.execute('CREATE TABLE users (name TEXT)')\nconn.execute(\"INSERT INTO users VALUES ('Ada')\")\n# 查询并按列名读取\n",
-    "solution": "row = conn.execute('SELECT name FROM users').fetchone()\nprint(row['name'])",
+    "solution": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.row_factory = sqlite3.Row\nconn.execute('CREATE TABLE users (name TEXT)')\nconn.execute(\"INSERT INTO users VALUES ('Ada')\")\n# 查询并按列名读取\n\nrow = conn.execute('SELECT name FROM users').fetchone()\nprint(row['name'])",
     "expected": "Ada",
     "must": [
       "row_factory"
@@ -125,7 +125,7 @@ addEngineeringStage(14, [
     "task": "创建 balance=100。先更新成50，再调用 rollback()，最终输出100。",
     "concept": "transaction 与 rollback",
     "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE account (balance INTEGER)')\nconn.execute('INSERT INTO account VALUES (100)')\nconn.commit()\n# 修改后回滚\n",
-    "solution": "conn.execute('UPDATE account SET balance=50')\nconn.rollback()\nprint(conn.execute('SELECT balance FROM account').fetchone()[0])",
+    "solution": "import sqlite3\nconn = sqlite3.connect(':memory:')\nconn.execute('CREATE TABLE account (balance INTEGER)')\nconn.execute('INSERT INTO account VALUES (100)')\nconn.commit()\n# 修改后回滚\n\nconn.execute('UPDATE account SET balance=50')\nconn.rollback()\nprint(conn.execute('SELECT balance FROM account').fetchone()[0])",
     "expected": "100",
     "must": [
       "rollback"

@@ -41,7 +41,7 @@ addEngineeringStage(11, [
     "task": "创建两个 Counter，对第一个 inc 两次、第二个一次，输出 2 1。",
     "concept": "实例拥有独立状态",
     "starter": "class Counter:\n    def __init__(self):\n        self.value = 0\n    def inc(self):\n        self.value += 1\n\n# 创建两个对象\n",
-    "solution": "a = Counter()\nb = Counter()\na.inc()\na.inc()\nb.inc()\nprint(a.value, b.value)",
+    "solution": "class Counter:\n    def __init__(self):\n        self.value = 0\n    def inc(self):\n        self.value += 1\n\n# 创建两个对象\n\na = Counter()\nb = Counter()\na.inc()\na.inc()\nb.inc()\nprint(a.value, b.value)",
     "expected": "2 1",
     "why": "实例属性存放在各自对象上，所以不同实例可以拥有不同状态。"
   },
@@ -92,7 +92,7 @@ addEngineeringStage(11, [
     "task": "创建 User 对象，输出 isinstance(user, User) 的结果。",
     "concept": "isinstance() 类型检查",
     "starter": "class User:\n    pass\n\nuser = User()\n# 检查类型\n",
-    "solution": "print(isinstance(user, User))",
+    "solution": "class User:\n    pass\n\nuser = User()\n# 检查类型\n\nprint(isinstance(user, User))",
     "expected": "True",
     "must": [
       "isinstance"
@@ -104,7 +104,7 @@ addEngineeringStage(11, [
     "task": "创建两个 User('A')、User('B') 放入列表并逐行输出名字。",
     "concept": "对象可以像普通值一样存入容器",
     "starter": "class User:\n    def __init__(self, name):\n        self.name = name\n\n# 创建对象列表\n",
-    "solution": "users = [User('A'), User('B')]\nfor user in users:\n    print(user.name)",
+    "solution": "class User:\n    def __init__(self, name):\n        self.name = name\n\n# 创建对象列表\n\nusers = [User('A'), User('B')]\nfor user in users:\n    print(user.name)",
     "expected": "A\nB",
     "must": [
       "for"
@@ -123,7 +123,7 @@ addEngineeringStage(11, [
   {
     "title": "银行账户",
     "boss": true,
-    "task": "实现 Account(owner,balance=0)，deposit(amount) 增加余额，withdraw(amount) 余额足够时扣款并返回 True，否则 False。Ada 初始100，存50，取70，输出 Ada 80 True。",
+    "task": "实现 Account(owner,balance=0)，本题只处理非负整数余额和金额。deposit(amount) 增加余额；withdraw(amount) 余额足够（含恰好相等）时扣款并返回 True，否则返回 False 且不改变余额。Ada 初始100，存50，取70，输出 Ada 80 True。",
     "concept": "类、初始化、实例状态、方法与业务规则综合",
     "starter": "class Account:\n    def __init__(self, owner, balance=0):\n        pass\n\n    def deposit(self, amount):\n        pass\n\n    def withdraw(self, amount):\n        pass\n\nacc = Account('Ada', 100)\nacc.deposit(50)\nok = acc.withdraw(70)\nprint(acc.owner, acc.balance, ok)\n",
     "solution": "class Account:\n    def __init__(self, owner, balance=0):\n        self.owner = owner\n        self.balance = balance\n\n    def deposit(self, amount):\n        self.balance += amount\n\n    def withdraw(self, amount):\n        if amount > self.balance:\n            return False\n        self.balance -= amount\n        return True\n\nacc = Account('Ada', 100)\nacc.deposit(50)\nok = acc.withdraw(70)\nprint(acc.owner, acc.balance, ok)",

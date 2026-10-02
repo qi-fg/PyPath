@@ -111,7 +111,7 @@ addEngineeringStage(10, [
     "task": "给 paths=['app/main.py','app/services/user.py','tests/test_user.py']，统计 app/ 下文件数量并输出 2。",
     "concept": "项目目录与包边界",
     "starter": "paths = ['app/main.py', 'app/services/user.py', 'tests/test_user.py']\n# 统计 app/ 文件\n",
-    "solution": "count = sum(1 for path in paths if path.startswith('app/'))\nprint(count)",
+    "solution": "paths = ['app/main.py', 'app/services/user.py', 'tests/test_user.py']\n# 统计 app/ 文件\n\ncount = sum(1 for path in paths if path.startswith('app/'))\nprint(count)",
     "expected": "2",
     "why": "工程项目通过目录把应用代码、服务层和测试代码分离。"
   },

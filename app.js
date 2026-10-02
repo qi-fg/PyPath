@@ -71,8 +71,8 @@ let pyodide = null;
 let running = false;
 let monacoEditor = null;
 let suppressEditorSave = false;
-let appVersion = '3.0.2';
-let displayVersion = '1.0.0';
+let appVersion = '3.0.4';
+let displayVersion = '1.0.1';
 let localServiceReady = false;
 let aiState = { enabled: false, configured: false, provider: '', model: '' };
 let lastRunOutput = '';
@@ -332,6 +332,10 @@ function renderCurrentLesson() {
   $('lessonIntro').textContent = lesson.intro;
   $('lessonTask').textContent = lesson.task;
   $('conceptBox').innerHTML = lesson.concept;
+  const validationInputs = [...new Set((lesson.hiddenTests || []).flatMap(test => Object.keys(test.overrides || {})))];
+  $('validationNote').textContent = validationInputs.length
+    ? '示例之外还会更换 ' + validationInputs.join('、') + ' 验证逻辑。请保留这些输入变量，用它们计算结果。'
+    : '除示例输出，还会校验题目要求的操作、语法或返回值。';
 
   const codeKey = String(lesson.id);
   const code = Object.prototype.hasOwnProperty.call(learningCache.codeByLesson, codeKey)
@@ -895,7 +899,7 @@ async function executeBrowserCase(code, stdinText) {
     pyodide.setStdout({ batched: (s) => out.push(s) });
     pyodide.setStderr({ batched: (s) => errOut.push(s) });
     pyodide.setStdin({ stdin: () => inputIndex < stdinLines.length ? stdinLines[inputIndex++] : undefined });
-    await pyodide.runPythonAsync(code);
+    await pyodide.runPythonAsync(window.PyPathJudge.buildCaseCode(code));
     return { stdout: out.join('\n'), stderr: errOut.join('\n'), error: '', timedOut: false };
   } catch (err) {
     return { stdout: out.join('\n'), stderr: errOut.join('\n'), error: String(err), timedOut: false };
@@ -937,7 +941,7 @@ async function runHiddenTests(lesson, code) {
   if (!tests.length) return { passed: true, total: 0 };
   for (let i = 0; i < tests.length; i++) {
     const test = tests[i];
-    const combined = test.appendCode ? `${code}\n\n# PyPath hidden test\n${test.appendCode}\n` : code;
+    const combined = window.PyPathJudge.buildCaseCode(code, test);
     const result = await executeCase(combined, test.stdin ?? lesson.stdin ?? '', lesson, true);
     if (result.error || normalized(result.stdout) !== normalized(test.expected)) {
       return { passed: false, total: tests.length, failedIndex: i, error: result.error || '' };
@@ -979,7 +983,6 @@ async function runCode() {
     }
 
     let passed = normalized(result.stdout) === normalized(lesson.expected);
-    if (lesson.codeMustInclude) passed = passed && lesson.codeMustInclude.every(token => code.includes(token));
 
     if (passed && Array.isArray(lesson.hiddenTests) && lesson.hiddenTests.length) {
       $('feedbackBox').className = 'feedback neutral';
@@ -990,9 +993,10 @@ async function runCode() {
         state.stats.wrongAnswers = (state.stats.wrongAnswers || 0) + 1;
         upsertReview(lesson, 'hidden-test', 24);
         $('feedbackBox').className = 'feedback warn';
-        $('feedbackBox').textContent = '基础用例通过了，但有一个隐藏测试没有通过。\n\n这通常说明代码只适用于当前示例。检查边界值、不同输入，或者有没有把答案写死。';
+        const test = lesson.hiddenTests[hidden.failedIndex];
+        $('feedbackBox').textContent = '基础用例通过了，但补充校验没有通过。\n\n检查项目：' + (test.label || '程序行为') + '\n请检查题目要求的变量、语法、边界条件及实际操作；只有示例输出正确还不够。';
         $('nextBtn').classList.add('hidden');
-        tutorSay('你的代码已经通过当前示例，但换一组输入就出现问题。先不要问隐藏输入是什么，检查代码是否真正根据输入和变量计算。');
+        tutorSay('当前示例输出正确，但仍有一项学习目标或行为校验未通过。对照题目检查实际计算、返回值与副作用，不需要照抄参考实现。');
         return;
       }
     }

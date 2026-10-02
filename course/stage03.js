@@ -4,7 +4,7 @@ addEngineeringStage(3, [
     "task": "a=12，b=8，输出 a > b 的结果。",
     "concept": "比较运算符 > < == != >= <=",
     "starter": "a = 12\nb = 8\n# 输出比较结果\n",
-    "solution": "print(a > b)",
+    "solution": "a = 12\nb = 8\n# 输出比较结果\n\nprint(a > b)",
     "expected": "True",
     "why": "比较表达式的结果是布尔值 True 或 False。",
     "walk": "读取 12 和 8，判断 12 > 8 成立，得到 True。",
@@ -17,7 +17,7 @@ addEngineeringStage(3, [
     "task": "score=85，score >= 60 时输出 pass。",
     "concept": "if 条件与缩进代码块",
     "starter": "score = 85\n# 写 if\n",
-    "solution": "if score >= 60:\n    print('pass')",
+    "solution": "score = 85\n# 写 if\n\nif score >= 60:\n    print('pass')",
     "expected": "pass",
     "must": [
       "if"
@@ -33,7 +33,7 @@ addEngineeringStage(3, [
     "task": "age=16，小于18输出 minor，否则输出 adult。",
     "concept": "else 处理条件不成立情况",
     "starter": "age = 16\n# 写 if / else\n",
-    "solution": "if age < 18:\n    print('minor')\nelse:\n    print('adult')",
+    "solution": "age = 16\n# 写 if / else\n\nif age < 18:\n    print('minor')\nelse:\n    print('adult')",
     "expected": "minor",
     "must": [
       "if",
@@ -50,7 +50,7 @@ addEngineeringStage(3, [
     "task": "score=82。>=90 输出 A，>=80 输出 B，否则 C。",
     "concept": "elif 与从上到下的分支匹配",
     "starter": "score = 82\n# 写三档判断\n",
-    "solution": "if score >= 90:\n    print('A')\nelif score >= 80:\n    print('B')\nelse:\n    print('C')",
+    "solution": "score = 82\n# 写三档判断\n\nif score >= 90:\n    print('A')\nelif score >= 80:\n    print('B')\nelse:\n    print('C')",
     "expected": "B",
     "must": [
       "elif"
@@ -63,18 +63,18 @@ addEngineeringStage(3, [
   },
   {
     "title": "and：必须同时成立",
-    "task": "age=20，has_ticket=True。两个条件都满足时输出 enter。",
+    "task": "入场规则：年龄至少 18 岁（含 18 岁），并且有票。给定 age=20、has_ticket=True，用 and 同时判断这两个条件；满足时输出 enter，否则不输出。不要把年龄条件写成 age == 20。",
     "concept": "and 逻辑与",
     "starter": "age = 20\nhas_ticket = True\n# 判断两个条件\n",
-    "solution": "if age >= 18 and has_ticket:\n    print('enter')",
+    "solution": "age = 20\nhas_ticket = True\n# 判断两个条件\n\nif age >= 18 and has_ticket:\n    print('enter')",
     "expected": "enter",
     "must": [
       "and"
     ],
-    "why": "and 只有在左右两个条件都为 True 时才得到 True。",
-    "walk": "年龄条件为 True，has_ticket 也是 True，整体条件成立。",
-    "hint1": "两个条件都要满足。",
-    "hint2": "用 and 连接。",
+    "why": "age >= 18 判断是否达到最低年龄，has_ticket 判断是否有票。and 要求两者同时成立。18、19、20 岁都有票时均可进入；17 岁或无票时不输出。",
+    "walk": "当前 age=20：20 >= 18 为 True；has_ticket=True；True and True 为 True，输出 enter。若 age=19，19 >= 18 仍为 True；若 age=17 或 has_ticket=False，条件为 False，不输出。",
+    "hint1": "先分别写出年龄至少 18 岁、有票两个条件。",
+    "hint2": "使用 age >= 18 and has_ticket；不是 age == 20。",
     "takeaway": "复杂规则通常由多个简单布尔条件组合而成。"
   },
   {
@@ -82,7 +82,7 @@ addEngineeringStage(3, [
     "task": "is_admin=False，is_owner=True。任意一个成立就输出 edit。",
     "concept": "or 逻辑或",
     "starter": "is_admin = False\nis_owner = True\n# 判断权限\n",
-    "solution": "if is_admin or is_owner:\n    print('edit')",
+    "solution": "is_admin = False\nis_owner = True\n# 判断权限\n\nif is_admin or is_owner:\n    print('edit')",
     "expected": "edit",
     "must": [
       "or"
@@ -98,7 +98,7 @@ addEngineeringStage(3, [
     "task": "logged_in=False。未登录时输出 login required。",
     "concept": "not 逻辑非",
     "starter": "logged_in = False\n# 判断未登录\n",
-    "solution": "if not logged_in:\n    print('login required')",
+    "solution": "logged_in = False\n# 判断未登录\n\nif not logged_in:\n    print('login required')",
     "expected": "login required",
     "must": [
       "not"
@@ -114,7 +114,7 @@ addEngineeringStage(3, [
     "task": "role='editor'，allowed=['admin','editor']。如果 role 在 allowed 中输出 allowed。",
     "concept": "in 成员运算",
     "starter": "role = 'editor'\nallowed = ['admin', 'editor']\n# 判断成员\n",
-    "solution": "if role in allowed:\n    print('allowed')",
+    "solution": "role = 'editor'\nallowed = ['admin', 'editor']\n# 判断成员\n\nif role in allowed:\n    print('allowed')",
     "expected": "allowed",
     "must": [
       "in"
@@ -130,7 +130,7 @@ addEngineeringStage(3, [
     "task": "user_ok=True，quota=2。只有用户有效且 quota>0 时输出 run。",
     "concept": "嵌套 if 与分层规则",
     "starter": "user_ok = True\nquota = 2\n# 使用嵌套 if\n",
-    "solution": "if user_ok:\n    if quota > 0:\n        print('run')",
+    "solution": "user_ok = True\nquota = 2\n# 使用嵌套 if\n\nif user_ok:\n    if quota > 0:\n        print('run')",
     "expected": "run",
     "must": [
       "if"
@@ -143,7 +143,7 @@ addEngineeringStage(3, [
   },
   {
     "title": "条件表达式",
-    "task": "score=70，用一行条件表达式得到 status='pass'，并输出 pass。",
+    "task": "给定 score=70。规则：score >= 60 时 status 为 'pass'，否则为 'fail'。用一行条件表达式赋值给 status，再输出 status。",
     "concept": "条件表达式 x if cond else y",
     "starter": "score = 70\n# 一行得到 status\n\nprint(status)\n",
     "solution": "score = 70\nstatus = 'pass' if score >= 60 else 'fail'\nprint(status)",

@@ -16,7 +16,7 @@ addEngineeringStage(16, [
     "task": "定义 is_even(n)，用两个 assert 验证 4 为 True、5 为 False，输出 passed。",
     "concept": "一个函数需要验证多个代表性输入",
     "starter": "def is_even(n):\n    return n % 2 == 0\n\n# 写两个测试\n",
-    "solution": "assert is_even(4) is True\nassert is_even(5) is False\nprint('passed')",
+    "solution": "def is_even(n):\n    return n % 2 == 0\n\n# 写两个测试\n\nassert is_even(4) is True\nassert is_even(5) is False\nprint('passed')",
     "expected": "passed",
     "must": [
       "assert"
@@ -28,7 +28,7 @@ addEngineeringStage(16, [
     "task": "adult(age) 规则 age>=18。用 assert 验证17 False、18 True、19 True。",
     "concept": "boundary testing 边界测试",
     "starter": "def adult(age):\n    return age >= 18\n\n# 测试边界\n",
-    "solution": "assert adult(17) is False\nassert adult(18) is True\nassert adult(19) is True\nprint('passed')",
+    "solution": "def adult(age):\n    return age >= 18\n\n# 测试边界\n\nassert adult(17) is False\nassert adult(18) is True\nassert adult(19) is True\nprint('passed')",
     "expected": "passed",
     "why": "边界附近最容易出现 > 与 >= 等 off-by-one 错误。"
   },
@@ -37,7 +37,7 @@ addEngineeringStage(16, [
     "task": "用 cases=[(1,2,3),(0,0,0),(-1,1,0)] 循环测试 add，全部通过后输出 3 tests。",
     "concept": "table-driven tests",
     "starter": "def add(a, b):\n    return a + b\n\ncases = [(1, 2, 3), (0, 0, 0), (-1, 1, 0)]\n# 循环测试\n",
-    "solution": "for a, b, expected in cases:\n    assert add(a, b) == expected\nprint(f'{len(cases)} tests')",
+    "solution": "def add(a, b):\n    return a + b\n\ncases = [(1, 2, 3), (0, 0, 0), (-1, 1, 0)]\n# 循环测试\n\nfor a, b, expected in cases:\n    assert add(a, b) == expected\nprint(f'{len(cases)} tests')",
     "expected": "3 tests",
     "must": [
       "for",
@@ -50,7 +50,7 @@ addEngineeringStage(16, [
     "task": "parse('abc') 应 raise ValueError。写测试捕获它，并输出 raised。",
     "concept": "测试失败路径与异常类型",
     "starter": "def parse(text):\n    return int(text)\n\n# 验证会抛 ValueError\n",
-    "solution": "try:\n    parse('abc')\nexcept ValueError:\n    print('raised')\nelse:\n    raise AssertionError('ValueError not raised')",
+    "solution": "def parse(text):\n    return int(text)\n\n# 验证会抛 ValueError\n\ntry:\n    parse('abc')\nexcept ValueError:\n    print('raised')\nelse:\n    raise AssertionError('ValueError not raised')",
     "expected": "raised",
     "why": "可靠测试不仅验证成功路径，也验证程序在错误输入下是否按约定失败。"
   },
@@ -59,7 +59,7 @@ addEngineeringStage(16, [
     "task": "按准备、执行、断言三步测试 total([2,3])==5，输出 passed。",
     "concept": "AAA 测试结构",
     "starter": "def total(nums):\n    return sum(nums)\n\n# Arrange / Act / Assert\n",
-    "solution": "nums = [2, 3]\nresult = total(nums)\nassert result == 5\nprint('passed')",
+    "solution": "def total(nums):\n    return sum(nums)\n\n# Arrange / Act / Assert\n\nnums = [2, 3]\nresult = total(nums)\nassert result == 5\nprint('passed')",
     "expected": "passed",
     "why": "把测试拆成准备、执行、断言三段，可以让失败原因更容易定位。"
   },
@@ -68,7 +68,7 @@ addEngineeringStage(16, [
     "task": "send(fetcher) 调用 fetcher() 并返回 status。提供 fake 返回200，测试输出200。",
     "concept": "fake dependency 隔离外部系统",
     "starter": "def send(fetcher):\n    return fetcher()['status']\n\ndef fake_fetch():\n    pass\n\n# 测试 send\n",
-    "solution": "def fake_fetch():\n    return {'status': 200}\n\nassert send(fake_fetch) == 200\nprint(send(fake_fetch))",
+    "solution": "def send(fetcher):\n    return fetcher()['status']\n\ndef fake_fetch():\n    pass\n\n# 测试 send\n\ndef fake_fetch():\n    return {'status': 200}\n\nassert send(fake_fetch) == 200\nprint(send(fake_fetch))",
     "expected": "200",
     "why": "测试时用 fake 替代网络、数据库等不稳定依赖，可以让测试快速且可重复。"
   },
@@ -89,7 +89,7 @@ addEngineeringStage(16, [
     "task": "normalize('  Ada  ') 应返回 Ada。先写 assert，再输出 passed。",
     "concept": "regression test 回归测试",
     "starter": "def normalize(text):\n    return text.strip()\n\n# 为曾经的空格 Bug 写测试\n",
-    "solution": "assert normalize('  Ada  ') == 'Ada'\nprint('passed')",
+    "solution": "def normalize(text):\n    return text.strip()\n\n# 为曾经的空格 Bug 写测试\n\nassert normalize('  Ada  ') == 'Ada'\nprint('passed')",
     "expected": "passed",
     "why": "修复 Bug 后留下测试，可以防止未来修改让同一个问题再次出现。"
   },
@@ -98,7 +98,7 @@ addEngineeringStage(16, [
     "task": "build_user('Ada') 返回 {'name':'Ada','active':True}。分别断言两个字段并输出 passed。",
     "concept": "对结构化结果验证关键字段",
     "starter": "def build_user(name):\n    return {'name': name, 'active': True}\n\n# 验证两个字段\n",
-    "solution": "user = build_user('Ada')\nassert user['name'] == 'Ada'\nassert user['active'] is True\nprint('passed')",
+    "solution": "def build_user(name):\n    return {'name': name, 'active': True}\n\n# 验证两个字段\n\nuser = build_user('Ada')\nassert user['name'] == 'Ada'\nassert user['active'] is True\nprint('passed')",
     "expected": "passed",
     "why": "结构化结果不一定要整对象比较，关键字段断言能更明确表达契约。"
   },

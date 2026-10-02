@@ -49,7 +49,7 @@ addEngineeringStage(20, [
     "task": "从三个任务中筛选 done=False，输出 ['a','c']。",
     "concept": "查询与过滤",
     "starter": "tasks = [{'title':'a','done':False},{'title':'b','done':True},{'title':'c','done':False}]\n# 筛选标题\n",
-    "solution": "open_titles = [t['title'] for t in tasks if not t['done']]\nprint(open_titles)",
+    "solution": "tasks = [{'title':'a','done':False},{'title':'b','done':True},{'title':'c','done':False}]\n# 筛选标题\n\nopen_titles = [t['title'] for t in tasks if not t['done']]\nprint(open_titles)",
     "expected": "['a', 'c']",
     "why": "业务查询通常是对实体集合做过滤、排序和投影。"
   },
@@ -58,7 +58,7 @@ addEngineeringStage(20, [
     "task": "任务 id 为3,1,2，按id排序输出 [1,2,3]。",
     "concept": "sorted(key=...) 稳定排序",
     "starter": "tasks = [{'id':3},{'id':1},{'id':2}]\n# 排序并输出 id\n",
-    "solution": "ordered = sorted(tasks, key=lambda t: t['id'])\nprint([t['id'] for t in ordered])",
+    "solution": "tasks = [{'id':3},{'id':1},{'id':2}]\n# 排序并输出 id\n\nordered = sorted(tasks, key=lambda t: t['id'])\nprint([t['id'] for t in ordered])",
     "expected": "[1, 2, 3]",
     "must": [
       "sorted",
@@ -77,10 +77,10 @@ addEngineeringStage(20, [
   },
   {
     "title": "命令解析",
-    "task": "parse('add write tests') 返回 command='add'、arg='write tests'，输出 add | write tests。",
+    "task": "实现 parse(text)：去两端空格，再按第一个空白拆成 command、arg；无参数时 arg=''；空白输入返回 ('','')。parse('add write tests') 输出 add | write tests。",
     "concept": "CLI 输入解析",
     "starter": "def parse(text):\n    pass\n\ncommand, arg = parse('add write tests')\nprint(command, '|', arg)\n",
-    "solution": "def parse(text):\n    parts = text.strip().split(maxsplit=1)\n    command = parts[0]\n    arg = parts[1] if len(parts) > 1 else ''\n    return command, arg\n\ncommand, arg = parse('add write tests')\nprint(command, '|', arg)",
+    "solution": "def parse(text):\n    parts = text.strip().split(maxsplit=1)\n    if not parts:\n        return '', ''\n    return parts[0], parts[1] if len(parts) > 1 else ''\n\ncommand, arg = parse('add write tests')\nprint(command, '|', arg)",
     "expected": "add | write tests",
     "why": "CLI 层负责把原始文本转换成业务层可以理解的命令与参数。"
   },
@@ -89,7 +89,7 @@ addEngineeringStage(20, [
     "task": "三个任务中两个done=True。输出 total=3 done=2 open=1。",
     "concept": "项目状态聚合",
     "starter": "tasks = [{'done':True},{'done':False},{'done':True}]\n# 统计\n",
-    "solution": "total = len(tasks)\ndone = sum(1 for t in tasks if t['done'])\nprint(f'total={total} done={done} open={total-done}')",
+    "solution": "tasks = [{'done':True},{'done':False},{'done':True}]\n# 统计\n\ntotal = len(tasks)\ndone = sum(1 for t in tasks if t['done'])\nprint(f'total={total} done={done} open={total-done}')",
     "expected": "total=3 done=2 open=1",
     "why": "面向用户的摘要通常来自底层实体集合的聚合统计。"
   },
@@ -108,7 +108,7 @@ addEngineeringStage(20, [
   {
     "title": "PyTask 完整应用",
     "boss": true,
-    "task": "完成一个内存任务应用：Task dataclass；Repo add/all/find；Service create/complete/stats；创建 code、test，完成第1项。最终输出两行：1 code True、2 test False，再输出 total=2 done=1 open=1。",
+    "task": "完成内存任务应用：Task(id,title,done=False) 数据类；Repo.add/all/find（all 返回列表副本，find 找不到返回 None）；Service.create 清洗标题、拒绝空标题（ValueError），从1起分配ID并返回Task；complete 按ID完成，找不到抛KeyError；stats 返回 total/done/open 统计。创建 code、test，完成第1项。输出三行：1 code True、2 test False、total=2 done=1 open=1。",
     "concept": "数据模型、Repository、Service、校验、状态更新、查询与统计的完整工程组合",
     "starter": "from dataclasses import dataclass\n\n@dataclass\nclass Task:\n    id: int\n    title: str\n    done: bool = False\n\nclass Repo:\n    def __init__(self):\n        self.items = []\n    def add(self, task):\n        pass\n    def all(self):\n        pass\n    def find(self, task_id):\n        pass\n\nclass Service:\n    def __init__(self, repo):\n        pass\n    def create(self, title):\n        pass\n    def complete(self, task_id):\n        pass\n    def stats(self):\n        pass\n\nrepo = Repo()\nservice = Service(repo)\nservice.create(' code ')\nservice.create('test')\nservice.complete(1)\nfor task in service.repo.all():\n    print(task.id, task.title, task.done)\nprint(service.stats())\n",
     "solution": "from dataclasses import dataclass\n\n@dataclass\nclass Task:\n    id: int\n    title: str\n    done: bool = False\n\nclass Repo:\n    def __init__(self):\n        self.items = []\n    def add(self, task):\n        self.items.append(task)\n    def all(self):\n        return self.items.copy()\n    def find(self, task_id):\n        return next((t for t in self.items if t.id == task_id), None)\n\nclass Service:\n    def __init__(self, repo):\n        self.repo = repo\n    def create(self, title):\n        title = title.strip()\n        if not title:\n            raise ValueError('empty title')\n        task = Task(len(self.repo.all()) + 1, title)\n        self.repo.add(task)\n        return task\n    def complete(self, task_id):\n        task = self.repo.find(task_id)\n        if task is None:\n            raise KeyError(task_id)\n        task.done = True\n    def stats(self):\n        items = self.repo.all()\n        total = len(items)\n        done = sum(1 for t in items if t.done)\n        return f'total={total} done={done} open={total-done}'\n\nrepo = Repo()\nservice = Service(repo)\nservice.create(' code ')\nservice.create('test')\nservice.complete(1)\nfor task in service.repo.all():\n    print(task.id, task.title, task.done)\nprint(service.stats())",

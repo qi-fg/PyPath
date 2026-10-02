@@ -1,7 +1,7 @@
 {
   "name": "PyPath",
-  "version": "3.0.3",
-  "displayVersion": "1.0.0",
+  "version": "3.0.4",
+  "displayVersion": "1.0.1",
   "dataSchema": 5,
-  "buildRevision": 3
+  "buildRevision": 4
 }

@@ -26,6 +26,7 @@ jobs:
           node --check app.js
           python3 -m py_compile server.py
           node scripts/validate_course.js
+          node scripts/validate_judge.js
 
       - name: Read versions
         shell: bash
@@ -50,6 +51,20 @@ jobs:
           SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
           echo "PACKAGE_SHA=$SHA" >> "$GITHUB_ENV"
 
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="/tmp/PyPath-V$RELEASE_VERSION.zip"
+          if gh release view "v$RELEASE_VERSION" >/dev/null 2>&1; then
+            gh release upload "v$RELEASE_VERSION" "$ZIP" --clobber
+          else
+            gh release create "v$RELEASE_VERSION" "$ZIP" --title "PyPath V$RELEASE_VERSION" --notes "PyPath V$RELEASE_VERSION"
+          fi
+
+
       - name: Update online manifest
         shell: bash
         run: |
@@ -63,15 +78,3 @@ jobs:
             git push
           fi
 
-      - name: Publish GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          ZIP="/tmp/PyPath-V$RELEASE_VERSION.zip"
-          if gh release view "v$RELEASE_VERSION" >/dev/null 2>&1; then
-            gh release upload "v$RELEASE_VERSION" "$ZIP" --clobber
-          else
-            gh release create "v$RELEASE_VERSION" "$ZIP" --title "PyPath V$RELEASE_VERSION" --notes "PyPath V$RELEASE_VERSION"
-          fi

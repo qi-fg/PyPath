@@ -49,7 +49,7 @@ addEngineeringStage(7, [
     "task": "定义 connect(host,port)，使用关键字参数 port=9000, host='localhost' 调用并输出 localhost:9000。",
     "concept": "keyword arguments",
     "starter": "def connect(host, port):\n    return f'{host}:{port}'\n\n# 使用关键字参数调用\n",
-    "solution": "print(connect(port=9000, host='localhost'))",
+    "solution": "def connect(host, port):\n    return f'{host}:{port}'\n\n# 使用关键字参数调用\n\nprint(connect(port=9000, host='localhost'))",
     "expected": "localhost:9000",
     "why": "关键字参数按名字绑定，调用顺序可以与定义顺序不同，且可读性更强。"
   },
@@ -64,7 +64,7 @@ addEngineeringStage(7, [
   },
   {
     "title": "理解局部变量",
-    "task": "global name='outer'。函数内部创建 name='inner' 并输出 inner，函数外再输出 outer。",
+    "task": "模块顶层变量 name='outer'。函数 show() 内部创建局部变量 name='inner' 并输出 inner，调用后在函数外输出 outer。不要使用 global 语句。",
     "concept": "局部作用域与全局作用域",
     "starter": "name = 'outer'\ndef show():\n    # 创建局部 name\n    pass\n\nshow()\nprint(name)\n",
     "solution": "name = 'outer'\ndef show():\n    name = 'inner'\n    print(name)\n\nshow()\nprint(name)",
@@ -100,7 +100,7 @@ addEngineeringStage(7, [
     "task": "定义 double(x) 与 add_one(x)，把 3 先 double 再 add_one，输出 7。",
     "concept": "函数组合与单一职责",
     "starter": "def double(x):\n    return x * 2\n\ndef add_one(x):\n    return x + 1\n\n# 组合调用\n",
-    "solution": "print(add_one(double(3)))",
+    "solution": "def double(x):\n    return x * 2\n\ndef add_one(x):\n    return x + 1\n\n# 组合调用\n\nprint(add_one(double(3)))",
     "expected": "7",
     "why": "小函数职责单一时，可以通过组合形成更复杂流程。"
   },
@@ -119,7 +119,7 @@ addEngineeringStage(7, [
   {
     "title": "输入校验工具箱",
     "boss": true,
-    "task": "实现 normalize_name(name) 去空格并标题化；is_valid_age(age) 判断 0<=age<=120；build_user(name,age) 返回字典。对 '  ada lovelace ' 和 36 输出 Ada Lovelace 36。",
+    "task": "实现 normalize_name(name)：去两端空格并标题化；is_valid_age(age)：判断 0<=age<=120（含两端）；build_user(name,age)：年龄有效时返回 {'name':清洗后的姓名,'age':age}，无效时返回 None。给定 '  ada lovelace ' 和 36，输出 Ada Lovelace 36。",
     "concept": "拆分函数、返回值、参数与函数组合综合",
     "starter": "def normalize_name(name):\n    pass\n\ndef is_valid_age(age):\n    pass\n\ndef build_user(name, age):\n    pass\n\nuser = build_user('  ada lovelace ', 36)\nprint(user['name'], user['age'])\n",
     "solution": "def normalize_name(name):\n    return name.strip().title()\n\ndef is_valid_age(age):\n    return 0 <= age <= 120\n\ndef build_user(name, age):\n    if not is_valid_age(age):\n        return None\n    return {'name': normalize_name(name), 'age': age}\n\nuser = build_user('  ada lovelace ', 36)\nprint(user['name'], user['age'])",

@@ -4,7 +4,7 @@ addEngineeringStage(12, [
     "task": "定义 Animal.speak() 返回 '?'；Dog 继承 Animal，不重写。输出 ?。",
     "concept": "继承复用父类行为",
     "starter": "class Animal:\n    def speak(self):\n        return '?'\n\n# 定义 Dog 继承 Animal\n",
-    "solution": "class Dog(Animal):\n    pass\n\nprint(Dog().speak())",
+    "solution": "class Animal:\n    def speak(self):\n        return '?'\n\n# 定义 Dog 继承 Animal\n\nclass Dog(Animal):\n    pass\n\nprint(Dog().speak())",
     "expected": "?",
     "why": "子类会继承父类未被覆盖的方法。"
   },
@@ -52,7 +52,7 @@ addEngineeringStage(12, [
   },
   {
     "title": "property 计算属性",
-    "task": "Rectangle 有 width/height，用 @property area 返回面积，输出 12。",
+    "task": "Rectangle(w,h) 保存 w、h，用 @property area 返回 w*h。创建 Rectangle(3,4)，通过 r.area 输出 12。",
     "concept": "@property 把方法暴露成只读属性接口",
     "starter": "class Rectangle:\n    def __init__(self, w, h):\n        self.w = w\n        self.h = h\n\n    # 定义 area property\n\nr = Rectangle(3, 4)\nprint(r.area)\n",
     "solution": "class Rectangle:\n    def __init__(self, w, h):\n        self.w = w\n        self.h = h\n\n    @property\n    def area(self):\n        return self.w * self.h\n\nr = Rectangle(3, 4)\nprint(r.area)",
@@ -76,7 +76,7 @@ addEngineeringStage(12, [
   },
   {
     "title": "staticmethod 工具方法",
-    "task": "Validator.is_email(text) 判断是否包含 @，对 a@b.com 输出 True。",
+    "task": "定义静态方法 Validator.is_email(text)，本题只检查字符串是否包含 @，不要求验证完整邮箱格式。对 'a@b.com' 输出 True。",
     "concept": "@staticmethod 不依赖实例或类状态",
     "starter": "class Validator:\n    # 定义 is_email\n    pass\n\nprint(Validator.is_email('a@b.com'))\n",
     "solution": "class Validator:\n    @staticmethod\n    def is_email(text):\n        return '@' in text\n\nprint(Validator.is_email('a@b.com'))",
@@ -116,7 +116,7 @@ addEngineeringStage(12, [
     "task": "Printer 只需要 Logger.log() 能力。使用组合而不是继承，让 Printer.print_doc() 输出 log:print。",
     "concept": "用组合降低不必要的继承耦合",
     "starter": "class Logger:\n    def log(self, msg):\n        print('log:' + msg)\n\nclass Printer:\n    def __init__(self):\n        pass\n    def print_doc(self):\n        pass\n\nPrinter().print_doc()\n",
-    "solution": "class Printer:\n    def __init__(self):\n        self.logger = Logger()\n    def print_doc(self):\n        self.logger.log('print')\n\nPrinter().print_doc()",
+    "solution": "class Logger:\n    def log(self, msg):\n        print('log:' + msg)\n\nclass Printer:\n    def __init__(self):\n        pass\n    def print_doc(self):\n        pass\n\nPrinter().print_doc()\n\nclass Printer:\n    def __init__(self):\n        self.logger = Logger()\n    def print_doc(self):\n        self.logger.log('print')\n\nPrinter().print_doc()",
     "expected": "log:print",
     "why": "Printer 不是一种 Logger，只是使用 Logger；组合更准确表达依赖关系。"
   },

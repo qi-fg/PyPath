@@ -28,7 +28,9 @@ const files = [
   'stage18.js',
   'stage19.js',
   'stage20.js',
-  'v1-hidden-tests.js'
+  'v1-hidden-tests.js',
+  'quality-tests.js',
+  'judge.js'
 ];
 
 const context = { console };
@@ -61,6 +63,11 @@ for (const lesson of lessons) {
   }
   if (!Array.isArray(lesson.hints) || lesson.hints.length !== 3) errors.push(lesson.key + ': expected 3 hints');
   if (!['browser', 'local'].includes(lesson.runtime)) errors.push(lesson.key + ': invalid runtime ' + lesson.runtime);
+  if (!lesson.hiddenTests.length) errors.push(lesson.key + ': no supplemental validation');
+  for (const test of lesson.hiddenTests) {
+    if (typeof test.expected !== 'string') errors.push(lesson.key + ': missing test expected stdout');
+    if (!test.stdin && !test.overrides && !test.checkCode && !test.appendCode && !test.moduleName) errors.push(lesson.key + ': empty test');
+  }
 }
 
 for (const stage of stages) {
@@ -95,20 +102,14 @@ function runPython(code, stdin) {
   };
 }
 
-function candidateCodes(lesson) {
-  const candidates = [];
-  if (lesson.solution.trim()) candidates.push(lesson.solution);
-  const combined = [lesson.starter, lesson.solution].filter(Boolean).join('\n');
-  if (combined.trim() && !candidates.includes(combined)) candidates.push(combined);
-  return candidates;
-}
+function candidateCodes(lesson) { return [lesson.solution]; }
 
 let executableCount = 0;
 for (const lesson of lessons) {
   let passingCode = null;
   const failures = [];
   for (const candidate of candidateCodes(lesson)) {
-    const result = runPython(candidate, lesson.stdin || '');
+    const result = runPython(context.PyPathJudge.buildCaseCode(candidate), lesson.stdin || '');
     if (!result.error && result.status === 0 && normalize(result.stdout) === normalize(lesson.expected)) {
       passingCode = candidate;
       break;
@@ -127,7 +128,7 @@ for (const lesson of lessons) {
   executableCount += 1;
 
   for (const [index, test] of (lesson.hiddenTests || []).entries()) {
-    const code = test.appendCode ? passingCode + '\n\n' + test.appendCode + '\n' : passingCode;
+    const code = context.PyPathJudge.buildCaseCode(passingCode, test);
     const result = runPython(code, test.stdin ?? lesson.stdin ?? '');
     if (result.error || result.status !== 0 || normalize(result.stdout) !== normalize(test.expected)) {
       errors.push(

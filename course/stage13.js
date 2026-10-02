@@ -25,7 +25,7 @@ addEngineeringStage(13, [
     "task": "用 Counter 统计 ['a','b','a','a']，输出 a 的次数 3。",
     "concept": "collections.Counter",
     "starter": "from collections import Counter\nitems = ['a', 'b', 'a', 'a']\n# 统计\n",
-    "solution": "from collections import Counter\ncounts = Counter(items)\nprint(counts['a'])",
+    "solution": "from collections import Counter\nitems = ['a', 'b', 'a', 'a']\n# 统计\n\nfrom collections import Counter\ncounts = Counter(items)\nprint(counts['a'])",
     "expected": "3",
     "must": [
       "Counter"
@@ -61,7 +61,7 @@ addEngineeringStage(13, [
     "task": "names=['A','B']、scores=[90,80]，输出 A 90、B 80。",
     "concept": "zip()",
     "starter": "names = ['A', 'B']\nscores = [90, 80]\n# 并行遍历\n",
-    "solution": "for name, score in zip(names, scores):\n    print(name, score)",
+    "solution": "names = ['A', 'B']\nscores = [90, 80]\n# 并行遍历\n\nfor name, score in zip(names, scores):\n    print(name, score)",
     "expected": "A 90\nB 80",
     "must": [
       "zip"
@@ -97,7 +97,7 @@ addEngineeringStage(13, [
     "task": "从 'id=123; user=Ada' 中用 re.search 提取 123。",
     "concept": "re.search 与捕获组",
     "starter": "import re\ntext = 'id=123; user=Ada'\n# 提取数字 id\n",
-    "solution": "import re\nm = re.search(r'id=(\\d+)', text)\nprint(m.group(1))",
+    "solution": "import re\ntext = 'id=123; user=Ada'\n# 提取数字 id\n\nimport re\nm = re.search(r'id=(\\d+)', text)\nprint(m.group(1))",
     "expected": "123",
     "must": [
       "re.search"
@@ -109,7 +109,7 @@ addEngineeringStage(13, [
     "task": "把 'a   b  c' 中连续空白压缩成单个空格，输出 a b c。",
     "concept": "re.sub()",
     "starter": "import re\ntext = 'a   b  c'\n# 压缩空白\n",
-    "solution": "import re\nprint(re.sub(r'\\s+', ' ', text))",
+    "solution": "import re\ntext = 'a   b  c'\n# 压缩空白\n\nimport re\nprint(re.sub(r'\\s+', ' ', text))",
     "expected": "a b c",
     "must": [
       "re.sub"

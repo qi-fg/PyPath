@@ -4,7 +4,7 @@ addEngineeringStage(18, [
     "task": "对 [10,20] 创建迭代器，连续 next 两次并输出 10 20。",
     "concept": "iterator protocol",
     "starter": "items = [10, 20]\n# 创建迭代器并读取\n",
-    "solution": "it = iter(items)\nprint(next(it), next(it))",
+    "solution": "items = [10, 20]\n# 创建迭代器并读取\n\nit = iter(items)\nprint(next(it), next(it))",
     "expected": "10 20",
     "must": [
       "iter",

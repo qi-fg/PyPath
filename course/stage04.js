@@ -4,7 +4,7 @@ addEngineeringStage(4, [
     "task": "依次输出列表中的 api、db、cache，每项一行。",
     "concept": "for 直接遍历元素",
     "starter": "services = ['api', 'db', 'cache']\n# 遍历输出\n",
-    "solution": "for service in services:\n    print(service)",
+    "solution": "services = ['api', 'db', 'cache']\n# 遍历输出\n\nfor service in services:\n    print(service)",
     "expected": "api\ndb\ncache",
     "must": [
       "for"
@@ -114,7 +114,7 @@ addEngineeringStage(4, [
     "task": "遍历 ['a','b','c']，输出 0 a、1 b、2 c。",
     "concept": "enumerate()",
     "starter": "items = ['a', 'b', 'c']\n# 同时得到索引和值\n",
-    "solution": "for i, item in enumerate(items):\n    print(i, item)",
+    "solution": "items = ['a', 'b', 'c']\n# 同时得到索引和值\n\nfor i, item in enumerate(items):\n    print(i, item)",
     "expected": "0 a\n1 b\n2 c",
     "must": [
       "enumerate"
@@ -130,7 +130,7 @@ addEngineeringStage(4, [
     "task": "对 users=['A','B'] 和 envs=['dev','prod'] 输出 A-dev、A-prod、B-dev、B-prod。",
     "concept": "嵌套 for",
     "starter": "users = ['A', 'B']\nenvs = ['dev', 'prod']\n# 组合输出\n",
-    "solution": "for user in users:\n    for env in envs:\n        print(f'{user}-{env}')",
+    "solution": "users = ['A', 'B']\nenvs = ['dev', 'prod']\n# 组合输出\n\nfor user in users:\n    for env in envs:\n        print(f'{user}-{env}')",
     "expected": "A-dev\nA-prod\nB-dev\nB-prod",
     "must": [
       "for"
