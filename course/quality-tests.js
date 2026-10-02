@@ -628,11 +628,6 @@
         "quota": "1"
       },
       "expected": "run"
-    },
-    {
-      "label": "行为与学习目标验证",
-      "checkCode": "assert any(any(type(child).__name__ == 'If' for child in n.body) for n in __pypath_nodes('If'))",
-      "expected": "run"
     }
   ],
   "s03-l10": [

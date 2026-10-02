@@ -36,6 +36,8 @@ for(const lesson of c.LESSONS){
 }
 const byKey=Object.fromEntries(c.LESSONS.map(l=>[l.key,l]));
 const bad=[
+ ['s03-l09',"user_ok=True\nquota=2\nif user_ok or quota>0:\n    print('run')"],
+ ['s03-l09',"user_ok=True\nquota=2\nif user_ok and quota>=0:\n    print('run')"],
   ['s03-l05',"age=20\nhas_ticket=True\nif age==20 and has_ticket:\n    print('enter')"],
   ['s03-l05',"age=20\nhas_ticket=True\nif age>18 and has_ticket:\n    print('enter')"],
   ['s03-l11',"age=18\nif age==18:\n    print('allow')\nelse:\n    print('deny')"],
@@ -45,6 +47,9 @@ const bad=[
 ];
 for(const [key,code] of bad)if(passes(byKey[key],code))throw Error('Invalid program accepted: '+key);
 const alternatives=[
+ ['s03-l09',"user_ok=True\nquota=2\nif user_ok and quota>0:\n    print('run')"],
+ ['s03-l09',"user_ok=True\nquota=2\nif user_ok:\n    if quota>0:\n        print('run')"],
+ ['s03-l12',"role='editor'\nactive=True\nbanned=False\nif active and not banned:\n    if role in ['admin','editor']:\n        print('access granted')\n    else:\n        print('access denied')\nelse:\n    print('access denied')"],
  ['s03-l05',"age=20\nhas_ticket=True\nif age>=18:\n    if has_ticket:\n        print('enter')"],
  ['s03-l06',"is_admin=False\nis_owner=True\nif is_admin:\n    print('edit')\nelif is_owner:\n    print('edit')"],
  ['s01-l11',byKey['s01-l11'].solution.replace('total += n','total = total + n')],
